@@ -26,4 +26,4 @@ COPY --from=prod-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/dist /app/dist
 WORKDIR /app
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start:prod"]

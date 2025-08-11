@@ -1,3 +1,8 @@
-dist
 node_modules
-README.md
+dist
+.git
+.env
+Dockerfile
+docker-compose.yml
+tests
+*.md
