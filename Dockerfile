@@ -1,11 +1,11 @@
-FROM node:20-alphine AS dev-dependancies-env
+FROM node:20-alphine AS dev-dependencies-env
 
 COPY . /app
 WORKDIR /app
 RUN npm ci
 
 
-FROM node:20-alphine AS prod-dependancies-env
+FROM node:20-alphine AS prod-dependencies-env
 
 COPY . /package.json package-lock.json ./app
 WORKDIR /app
