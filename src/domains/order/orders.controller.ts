@@ -1,5 +1,6 @@
-import { Controller, Delete, Get, Patch, Post, Put } from "@nestjs/common";
+import { Controller, Delete, Get, Patch, Post, Put, UseGuards } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
+import { AuthGuard } from "../auth/auth.guard";
 
 @Controller('orders')
 export class OrdersController {

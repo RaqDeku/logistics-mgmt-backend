@@ -3,13 +3,20 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Admin, AdminSchema } from "./schema/admin.schema";
-import { EventEmitterModule } from "@nestjs/event-emitter";
+import { ResetPasswordListener } from "src/listeners/reset-password.listener";
+import { jwtConstants } from "./constants";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: Admin.name , schema: AdminSchema}]),
+        JwtModule.register({
+            global: true,
+            secret: jwtConstants.secret,
+            signOptions: { expiresIn: '10m' },
+        }),
     ],
     controllers: [AuthController],
-    providers: [AuthService]
+    providers: [AuthService],
 })
 export class AuthModule{}
