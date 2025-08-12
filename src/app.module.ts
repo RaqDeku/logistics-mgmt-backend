@@ -6,6 +6,7 @@ import keys from './config/keys';
 import { AuthModule } from './domains/auth/auth.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrderModule } from './domains/order/order.module';
+import { EmailService } from './services/emails/email.service';
 
 @Module({
   imports: [
