@@ -3,13 +3,16 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Admin, AdminSchema } from "./schema/admin.schema";
-import { ResetPasswordListener } from "src/listeners/reset-password.listener";
 import { jwtConstants } from "./constants";
 import { JwtModule } from "@nestjs/jwt";
+import { PasswordResetToken, PasswordResetTokenSchema} from "./schema/token.schema";
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{ name: Admin.name , schema: AdminSchema}]),
+        MongooseModule.forFeature([
+            { name: Admin.name , schema: AdminSchema},
+            { name: PasswordResetToken.name, schema: PasswordResetTokenSchema}
+        ]),
         JwtModule.register({
             global: true,
             secret: jwtConstants.secret,

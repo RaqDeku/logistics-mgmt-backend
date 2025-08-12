@@ -7,6 +7,7 @@ import { AuthModule } from './domains/auth/auth.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrderModule } from './domains/order/order.module';
 import { EmailService } from './services/emails/email.service';
+import { EmailModule } from './services/emails/email.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { EmailService } from './services/emails/email.service';
       global: true,
     }), 
     AuthModule,
-    OrderModule
+    OrderModule,
+    EmailModule
   ],
   controllers: [AppController],
   providers: [AppService],
