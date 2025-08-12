@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Admin, AdminDocument } from "./schema/admin.schema";
@@ -8,6 +8,8 @@ import { JwtService } from "@nestjs/jwt";
 import { createHmac, randomBytes } from "crypto";
 import { jwtConstants } from "./constants";
 import { LoginAdminDto } from "./dto/login-admin.dto";
+import { PasswordResetToken, ResetPasswordTokenDocument } from "./schema/token.schema";
+import { ResetPasswordEvent } from "src/events/reset-password.event";
 
 @Injectable()
 export class AuthService {
@@ -15,7 +17,9 @@ export class AuthService {
         @InjectModel(Admin.name) 
         private adminModel: Model<AdminDocument>,
         private eventEmitter: EventEmitter2,
-        private jwtService: JwtService
+        private jwtService: JwtService,
+        @InjectModel(PasswordResetToken.name)
+        private resetToken: Model<ResetPasswordTokenDocument>
     ) {}
 
     async createAdmin(creds: CreateAdminDto) {
@@ -24,21 +28,25 @@ export class AuthService {
             throw new BadRequestException("Email exist");
         }
 
-        const newAdmin = new this.adminModel(creds)
-        const savedAdmin = await newAdmin.save()
-
-        const payload = {
-            id: savedAdmin.id,
-            email: savedAdmin.id,
-        }
-
-        return {
-            token: await this.jwtService.signAsync(payload),
-            cookie: await this.generateCookie(savedAdmin.email),
-            user: {
-                name: savedAdmin.full_name,
-                email: savedAdmin.email
+        try { 
+            const newAdmin = new this.adminModel(creds)
+            const savedAdmin = await newAdmin.save()
+    
+            const payload = {
+                id: savedAdmin.id,
+                email: savedAdmin.id,
             }
+    
+            return {
+                token: await this.jwtService.signAsync(payload),
+                cookie: await this.generateCookie(savedAdmin.email),
+                user: {
+                    name: savedAdmin.full_name,
+                    email: savedAdmin.email
+                }
+            }
+        } catch (error) {
+            throw new InternalServerErrorException("Something went wrong")
         }
     }
 
@@ -48,23 +56,63 @@ export class AuthService {
             throw new BadRequestException("Invalid credentials");
         }
 
-        const match = await admin.comparePassword(creds.password)
-        if(!match) {
-            throw new BadRequestException("Invalid credentials");
-        }
-
-        const payload = {
-            id: admin.id,
-            email: admin.id,
-        }
-
-        return {
-            token: await this.jwtService.signAsync(payload),
-            cookie: await this.generateCookie(admin.email),
-            user: {
-                name: admin.full_name,
-                email: admin.email
+        try {
+            const match = await admin.comparePassword(creds.password)
+            if(!match) {
+                throw new BadRequestException("Invalid credentials");
             }
+    
+            const payload = {
+                id: admin.id,
+                email: admin.id,
+            }
+    
+            return {
+                token: await this.jwtService.signAsync(payload),
+                cookie: await this.generateCookie(admin.email),
+                user: {
+                    name: admin.full_name,
+                    email: admin.email
+                }
+            }
+        } catch (error) {
+            throw new InternalServerErrorException("Something went wrong")
+        }
+    }
+
+    async resetPasswordToken(email: string): Promise<string> {
+        const adminExist = await this.checkAdminExists(email);
+        if (!adminExist) {
+            return "Email sent!";
+        }
+
+        try {
+            const token = this.generateOTPToken()
+
+            let resetToken = await this.resetToken.findOne({ email }).exec();
+      
+            if (resetToken) {
+                resetToken.token = token;
+                resetToken.expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+                resetToken.status = 'requested';
+            } else {
+                resetToken = new this.resetToken({
+                    email,
+                    token,
+                });
+            }
+
+            await resetToken.save()
+           
+            const resetPasswordEvent = new ResetPasswordEvent();
+            resetPasswordEvent.email = email;
+            resetPasswordEvent.token = token;
+
+            this.eventEmitter.emit('reset.password', resetPasswordEvent)
+        
+            return "Email Sent";
+        } catch (error) {
+            throw new InternalServerErrorException("Something went wrong")
         }
     }
     
@@ -106,5 +154,9 @@ export class AuthService {
             .digest('hex');
 
         return computedHash === hash;
+    }
+
+    private generateOTPToken(): string {
+        return Math.floor(100000 + Math.random() * 900000).toString()
     }
 }

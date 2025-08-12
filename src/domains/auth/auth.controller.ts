@@ -5,7 +5,7 @@ import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { VerifyTokenDto } from "./dto/verify-token.dto";
 import express from "express";
 import { AuthenticatedAdmin } from "./types";
-import { ApiBody, ApiCreatedResponse, ApiOperation } from "@nestjs/swagger";
+import { ApiBody, ApiCreatedResponse, ApiOperation, ApiOkResponse } from "@nestjs/swagger";
 import { LoginAdminDto } from "./dto/login-admin.dto";
 
 @Controller('admins')
@@ -37,7 +37,7 @@ export class AuthController {
     @Post('/login')
     @ApiOperation({ summary: 'Logs in an admin' })
     @ApiBody({ type: LoginAdminDto, description: 'Admin login details' })
-    @ApiCreatedResponse({
+    @ApiOkResponse({
         description: 'The admin has been successfully logged in',
         type: AuthenticatedAdmin,
     })
@@ -57,7 +57,13 @@ export class AuthController {
     }
 
     @Get('/reset-token')
-    resetPasswordToken(@Query('email') email:string) {}
+    @ApiOperation({ summary: 'Send password reset token to admin email' })
+    @ApiOkResponse({
+        description: 'Email sent!',
+    })
+    async resetPasswordToken(@Query('email') email:string) {
+        return await this.authService.resetPasswordToken(email)
+    }
 
     @Post('/verify-reset-token')
     verifyPasswordResetToken(@Body() verifyTokenDto: VerifyTokenDto) {}
