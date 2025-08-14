@@ -87,7 +87,6 @@ export class AuthService {
 
         try {
             const token = this.generateOTPToken()
-            console.log(token);
             
             let resetToken = await this.resetToken.findOne({ email }).exec();
       

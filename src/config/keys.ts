@@ -4,7 +4,7 @@ export default {
       transport: {
         host: process.env.SMTP_HOST || 'smtp.example.com',
         port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === 'true',
+        // secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER || 'your-email@example.com',
           pass: process.env.SMTP_PASS || 'your-password',

@@ -6,12 +6,16 @@ import keys from './config/keys';
 import { AuthModule } from './domains/auth/auth.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrderModule } from './domains/order/order.module';
-import { EmailService } from './services/emails/email.service';
 import { EmailModule } from './services/emails/email.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(keys.mongoURI),
+    ConfigModule.forRoot({
+      envFilePath: ".env",
+      isGlobal: true
+    }),
+    MongooseModule.forRoot(process.env.MONGO_URI),
     EventEmitterModule.forRoot({
       wildcard: true,
       delimiter: '.',
