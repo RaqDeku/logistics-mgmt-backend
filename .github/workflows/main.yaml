@@ -27,3 +27,15 @@ jobs:
           docker login -u capton007 -p ${{ secrets.DOCKER_TOKEN }}
           docker push capton007/backend-logistics:dev
           docker logout
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trigger deployment on Render
+        env:
+          deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          curl "$deploy_url"

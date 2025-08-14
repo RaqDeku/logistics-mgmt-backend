@@ -66,11 +66,33 @@ export class AuthController {
     }
 
     @Post('/verify-reset-token')
-    verifyPasswordResetToken(@Body() verifyTokenDto: VerifyTokenDto) {}
+    @ApiOperation({ summary: 'Verify password reset token sent to admin email' })
+    @ApiBody({ type: VerifyTokenDto, description: 'verify token details' })
+    @ApiOkResponse({
+        description: 'Verified',
+    })
+    async verifyPasswordResetToken(@Body() verifyTokenDto: VerifyTokenDto) {
+        return await this.authService.verifyPasswordResetToken(verifyTokenDto)
+    }
 
     @Post('/reset-password')
-    resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {}
+    @ApiOperation({ summary: 'Reset admin password after token verification' })
+    @ApiBody({ type: ResetPasswordDto, description: 'Reset Password details' })
+    @ApiOkResponse({
+        description: 'Password updated',
+    })
+    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+        return await this.authService.resetPassword(resetPasswordDto)
+    }
 
     @Delete('/logout')
-    logout() {}
+    @ApiOperation({ summary: 'Logs out the admin' })
+    @ApiOkResponse({
+        description: 'Success',
+    })
+    async logout(@Res({ passthrough: true }) res: express.Response) {
+        res.clearCookie("_session")
+
+        return "Success"
+    }
 }

@@ -6,10 +6,12 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { CreateAdminDto } from "./dto/create-admin.dto";
 import { JwtService } from "@nestjs/jwt";
 import { createHmac, randomBytes } from "crypto";
-import { jwtConstants } from "./constants";
+import { jwtConstants, resetTokenStatus } from "./constants";
 import { LoginAdminDto } from "./dto/login-admin.dto";
 import { PasswordResetToken, ResetPasswordTokenDocument } from "./schema/token.schema";
 import { ResetPasswordEvent } from "src/events/reset-password.event";
+import { VerifyTokenDto } from "./dto/verify-token.dto";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 @Injectable()
 export class AuthService {
@@ -56,16 +58,13 @@ export class AuthService {
             throw new BadRequestException("Invalid credentials");
         }
 
+        const match = await admin.comparePassword(creds.password)
+        if(!match) {
+            throw new BadRequestException("Invalid credentials");
+        }
+
         try {
-            const match = await admin.comparePassword(creds.password)
-            if(!match) {
-                throw new BadRequestException("Invalid credentials");
-            }
-    
-            const payload = {
-                id: admin.id,
-                email: admin.id,
-            }
+            const payload = { id: admin.id, email: admin.id }
     
             return {
                 token: await this.jwtService.signAsync(payload),
@@ -88,7 +87,8 @@ export class AuthService {
 
         try {
             const token = this.generateOTPToken()
-
+            console.log(token);
+            
             let resetToken = await this.resetToken.findOne({ email }).exec();
       
             if (resetToken) {
@@ -99,6 +99,8 @@ export class AuthService {
                 resetToken = new this.resetToken({
                     email,
                     token,
+                    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+                    status: 'requested',
                 });
             }
 
@@ -112,7 +114,59 @@ export class AuthService {
         
             return "Email Sent";
         } catch (error) {
+            console.log(error);
+            
             throw new InternalServerErrorException("Something went wrong")
+        }
+    }
+
+    async verifyPasswordResetToken(verifyTokenDto: VerifyTokenDto) {
+        const resetToken = await this.resetToken.findOne({ email: verifyTokenDto.email }).exec()
+        if (!resetToken) {
+            throw new BadRequestException("Invalid token")
+        }
+
+        if (!await resetToken.isTokenValid(verifyTokenDto.token)) {
+            throw new BadRequestException("Invalid token");
+        }
+
+        try {
+            resetToken.status = resetTokenStatus.VERIFIED;
+            resetToken.expiresAt = new Date(Date.now());
+            resetToken.save();
+
+            return "Verified"
+        } catch (error) {
+            throw new InternalServerErrorException("Something went wrong");
+        }
+    }
+
+    async resetPassword(resetPasswordDto: ResetPasswordDto) {
+        const adminExist = await this.checkAdminExists(resetPasswordDto.email);
+        if (!adminExist) {
+            return "Password updated";
+        }
+
+        const resetToken = await this.resetToken.findOne({ email: resetPasswordDto.email }).exec()
+        if (!resetToken) {
+            return "Password updated"
+        } 
+
+        if ([resetTokenStatus.REQUESTED, resetTokenStatus.USED].includes(resetToken.status)) {
+            return "Password updated"
+        }
+
+        const admin = await this.adminModel.findOne({ email: resetPasswordDto.email }).exec()
+
+        try {
+            resetToken.status = resetTokenStatus.USED;
+            admin.password = resetPasswordDto.password;
+
+            await Promise.all([admin.save(), resetToken.save()]);
+    
+            return "Password updated"
+        } catch (error) {
+            throw new InternalServerErrorException("something went wrong")
         }
     }
     
