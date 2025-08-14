@@ -1,5 +1,5 @@
 export default {
-    mongoURI: "mongodb+srv://s224dr:4MGkPQ2yPT8VEK2z@cluster0.5lx2kws.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    mongoURI: process.env.MONGO_URI,
     emailConfig: {
       transport: {
         host: process.env.SMTP_HOST || 'smtp.example.com',
