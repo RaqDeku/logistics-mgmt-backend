@@ -6,6 +6,7 @@ export class CreateAdminDto {
     description: 'The email address of the admin',
     example: 'admin@example.com',
   })
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 
@@ -15,6 +16,7 @@ export class CreateAdminDto {
     minLength: 6,
   })
   @IsString()
+  @IsNotEmpty()
   @MinLength(6)
   password: string;
 
