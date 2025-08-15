@@ -1,32 +1,41 @@
-import { Controller, Delete, Get, Patch, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Patch, Post, Put, UseGuards } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
-import { AuthGuard } from "../auth/auth.guard";
+import { CreateOrdersDto } from "./dto/create-order.dto";
+import { ApiBody, ApiCreatedResponse, ApiOperation } from "@nestjs/swagger";
 
 @Controller('orders')
 export class OrdersController {
     constructor(private readonly orderService: OrdersService) {}
 
     @Post()
-    create() {}
+    @ApiOperation({ summary: 'Create a new order to deliver' })
+    @ApiBody({ type: CreateOrdersDto, description: 'Order details' })
+    @ApiCreatedResponse({
+        description: 'Order created successfully',
+        type: CreateOrdersDto,
+    })
+    async create(@Body() createOrdersDto: CreateOrdersDto) {
+        return await this.orderService.createOrders(createOrdersDto)
+    }
 
     @Get()
     findAll() {}
 
-    @Get('/:id')
+    @Get('/:order_id')
     find() {}
 
-    @Get('track/:orderId')
+    @Get('track/:order_id')
     track() {}
 
-    @Put('/:id')
+    @Put('/:order_id')
     update() {}
 
-    @Patch('/status/:id')
+    @Patch('/status/:order_id')
     updateStatus() {}
 
     @Get('/export')
     export() {}
 
-    @Delete('/:id')
+    @Delete('/:order_id')
     delete() {}
 }

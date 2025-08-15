@@ -2,14 +2,14 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class Admin {
     @ApiProperty({
-        description: 'The admin email',
-        example: "admin@example.com",
+      description: 'The admin email',
+      example: "admin@example.com",
     })
     email: string
 
     @ApiProperty({
-        description: 'The admin full name',
-        example: "John Doe",
+      description: 'The admin full name',
+      example: "John Doe",
     })
     name: string
 }
