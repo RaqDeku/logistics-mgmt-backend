@@ -10,6 +10,17 @@ async function bootstrap() {
     .setTitle('Logistics Management API')
     .setDescription('The API description')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter your JWT token',
+        in: 'header',
+      },
+      'Bearer',
+    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, documentFactory);

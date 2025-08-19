@@ -7,11 +7,13 @@ import express from "express";
 import { AuthenticatedAdmin } from "./types";
 import { ApiBody, ApiCreatedResponse, ApiOperation, ApiOkResponse } from "@nestjs/swagger";
 import { LoginAdminDto } from "./dto/login-admin.dto";
+import { Public } from "./auth.guard";
 
 @Controller('admins')
 export class AuthController {
     constructor(private readonly authService:AuthService) {}
 
+    @Public()
     @Post('/register')
     @ApiOperation({ summary: 'Register a new admin' })
     @ApiBody({ type: CreateAdminDto, description: 'Admin registration details' })
@@ -34,6 +36,7 @@ export class AuthController {
         return { token, user };
     }
 
+    @Public()
     @Post('/login')
     @ApiOperation({ summary: 'Logs in an admin' })
     @ApiBody({ type: LoginAdminDto, description: 'Admin login details' })
@@ -56,6 +59,7 @@ export class AuthController {
         return { token, user };
     }
 
+    @Public()
     @Get('/reset-token')
     @ApiOperation({ summary: 'Send password reset token to admin email' })
     @ApiOkResponse({
@@ -65,6 +69,7 @@ export class AuthController {
         return await this.authService.resetPasswordToken(email)
     }
 
+    @Public()
     @Post('/verify-reset-token')
     @ApiOperation({ summary: 'Verify password reset token sent to admin email' })
     @ApiBody({ type: VerifyTokenDto, description: 'verify token details' })
@@ -75,6 +80,7 @@ export class AuthController {
         return await this.authService.verifyPasswordResetToken(verifyTokenDto)
     }
 
+    @Public()
     @Post('/reset-password')
     @ApiOperation({ summary: 'Reset admin password after token verification' })
     @ApiBody({ type: ResetPasswordDto, description: 'Reset Password details' })
@@ -85,6 +91,7 @@ export class AuthController {
         return await this.authService.resetPassword(resetPasswordDto)
     }
 
+    @Public()
     @Delete('/logout')
     @ApiOperation({ summary: 'Logs out the admin' })
     @ApiOkResponse({

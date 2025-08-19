@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ResetPasswordEvent } from '../../events/reset-password.event';
 import * as nodemailer from 'nodemailer';
 import { OrderCreatedEvent } from 'src/events/order-created.event';
+import { OrderStatusUpdatedEvent } from 'src/events/order-status-updated.event';
 
 @Injectable()
 export class EmailService {
@@ -23,7 +24,7 @@ export class EmailService {
   @OnEvent('reset.password', { async: true })
   async handleResetPasswordEvent(event: ResetPasswordEvent) {
     const { email, token } = event;
-    
+
     try {
       await this.transporter.sendMail({
         from: '"Logistics Management" <no-reply@your-app.com>',
@@ -36,7 +37,6 @@ export class EmailService {
           <p>This link expires in 15 minutes.</p>
         `,
       });
-      
     } catch (error) {
       console.error('Error sending password reset email:', error);
       // throw new Error('Failed to send password reset email');
@@ -45,7 +45,15 @@ export class EmailService {
 
   @OnEvent('order.created', { async: true })
   async handleOrderCreatedEvent(event: OrderCreatedEvent) {
-    const { receiver_email, id, type, estimated_delivery_date, status, net_weight, receiver_name } = event;
+    const {
+      receiver_email,
+      id,
+      type,
+      estimated_delivery_date,
+      status,
+      net_weight,
+      receiver_name,
+    } = event;
 
     try {
       await this.transporter.sendMail({
@@ -130,10 +138,13 @@ export class EmailService {
           </html>
         `,
       });
-      
     } catch (error) {
       console.error('Error sending order creation email:', error);
     }
-    
+  }
+
+  @OnEvent('order.updated', { async: true })
+  async handleOrderUpdatedEvent(event: OrderStatusUpdatedEvent) {
+    console.log('called');
   }
 }
