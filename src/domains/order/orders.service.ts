@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -208,6 +207,86 @@ export class OrdersService {
       this.eventEmitter.emit('order.updated', orderUpdatedEvent);
 
       return 'Order updated successfully';
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  async trackOrder(order_id: string) {
+    const order = await this.orderModel.findOne({ order_id }).exec();
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    try {
+      return await this.orderActivityModel
+        .find({ order_id })
+        .select('status date')
+        .sort({ date: -1 })
+        .exec();
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  async analytics() {
+    try {
+      const orders = await this.orderActivityModel
+        .aggregate([
+          {
+            $sort: { date: -1 },
+          },
+          // Group by order_id to get the latest activity for each order
+          {
+            $group: {
+              _id: '$order_id',
+              latest_activity: { $first: '$$ROOT' },
+            },
+          },
+          // Group by the status of the latest activity and count
+          {
+            $group: {
+              _id: '$latest_activity.status',
+              count: { $sum: 1 },
+            },
+          },
+          // Format the output
+          {
+            $project: {
+              _id: 0,
+              status: '$_id',
+              count: 1,
+            },
+          },
+        ])
+        .exec();
+
+      const result = {
+        processing: 0,
+        in_transit: 0,
+        on_hold: 0,
+        delivered: 0,
+        total: 0,
+      };
+
+      orders.forEach((item) => {
+        if (item.status === OrderStatus.PROCESSING)
+          result.processing = item.count;
+        else if (item.status === UpdateOrderStatuses.IN_TRANSIT)
+          result.in_transit = item.count;
+        else if (item.status === UpdateOrderStatuses.ON_HOLD)
+          result.on_hold = item.count;
+        else if (item.status === UpdateOrderStatuses.DELIVERED)
+          result.delivered = item.count;
+
+        result.total += item.count;
+      });
+
+      return result;
     } catch (error) {
       console.log(error);
 
