@@ -51,6 +51,17 @@ export class OrdersController {
     return await this.orderService.getAllOrders();
   }
 
+  @Get('analytics')
+  @ApiBearerAuth('Bearer')
+  @ApiOperation({ summary: 'Get analytics of all orders' })
+  async analytics() {
+    return await this.orderService.analytics();
+  }
+
+  @Get('export')
+  @ApiBearerAuth('Bearer')
+  async export() {}
+
   @Get(':order_id')
   @ApiBearerAuth('Bearer')
   @ApiOperation({ summary: 'Get an order with receiver details' })
@@ -61,13 +72,17 @@ export class OrdersController {
 
   @Public()
   @Get('track/:order_id')
-  async track(@Param('order_id') order_id: string) {}
+  @ApiOperation({ summary: 'Get tracking details of the order' })
+  @ApiOkResponse()
+  async track(@Param('order_id') order_id: string) {
+    return await this.orderService.trackOrder(order_id);
+  }
 
-  @Put('/:order_id')
+  @Put(':order_id')
   @ApiBearerAuth('Bearer')
   async update(@Param('order_id') order_id: string) {}
 
-  @Patch('/status/:order_id')
+  @Patch('status/:order_id')
   @ApiBearerAuth('Bearer')
   @ApiOperation({ summary: 'Update the status of an order' })
   @ApiBody({
@@ -89,10 +104,6 @@ export class OrdersController {
       admin,
     );
   }
-
-  @Get('/export')
-  @ApiBearerAuth('Bearer')
-  async export() {}
 
   @Delete('/:order_id')
   @ApiBearerAuth('Bearer')
