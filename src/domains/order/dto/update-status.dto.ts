@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UpdateOrderStatuses } from '../constants';
-import { IsNotEmpty, IsString, MinLength, ValidateIf } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, ValidateIf } from 'class-validator';
 
 export class UpdateOrderStatus {
   @ApiProperty({
@@ -21,6 +21,6 @@ export class UpdateOrderStatus {
   @ValidateIf((o) => o.status === UpdateOrderStatuses.ON_HOLD)
   @IsNotEmpty({ message: 'Reason is required when status is On Hold' })
   @IsString()
-  @MinLength(255, { message: 'Reason must be at least 255 characters long' })
+  @MaxLength(255, { message: 'Reason must be at least 255 characters long' })
   reason?: string;
 }

@@ -3,6 +3,8 @@ import {
   IsDateString,
   IsEmail,
   IsNotEmpty,
+  IsNumber,
+  IsNumberString,
   IsObject,
   IsString,
   MaxLength,
@@ -109,6 +111,14 @@ export class ItemInformation {
   @IsNotEmpty()
   @IsDateString({ strict: true })
   estimated_delivery_date: Date;
+
+  @ApiProperty({
+    description: "The item's estimated revenue",
+    example: '100.00',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  revenue: number;
 }
 
 export class OrderResponseDto {
