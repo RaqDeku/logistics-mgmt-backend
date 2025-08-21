@@ -19,7 +19,7 @@ export class Receiver {
   @Prop({ required: true, type: ReceiverAddress })
   address: ReceiverAddress;
 
-  @Prop({ required: true, type: [{ type: Types.ObjectId, ref: 'order' }] })
+  @Prop({ required: true, type: [{ type: Types.ObjectId, ref: 'Order' }] })
   orders: Types.ObjectId[];
 }
 
