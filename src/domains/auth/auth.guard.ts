@@ -1,4 +1,3 @@
-
 import {
   CanActivate,
   ExecutionContext,
@@ -17,13 +16,13 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    protected payload: any
+  protected payload: any;
 
-    constructor(
-      private jwtService: JwtService,
-      private authService: AuthService,
-      private reflector: Reflector
-    ) {}
+  constructor(
+    private jwtService: JwtService,
+    private authService: AuthService,
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -41,21 +40,18 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      this.payload = await this.jwtService.verifyAsync(
-        token,
-        {
-          secret: jwtConstants.secret
-        }
-      );
-      
+      this.payload = await this.jwtService.verifyAsync(token, {
+        secret: jwtConstants.secret,
+      });
+
       request['user'] = this.payload;
     } catch {
       throw new UnauthorizedException();
     }
 
-    if(!this.isCookieValid) {
-        throw new UnauthorizedException()
-    }
+    // if(!this.isCookieValid) {
+    //     throw new UnauthorizedException()
+    // }
 
     return true;
   }
@@ -66,8 +62,8 @@ export class AuthGuard implements CanActivate {
   }
 
   private isCookieValid(request: Request): boolean {
-    const cookie = request.cookies['_session']
+    const cookie = request.cookies['_session'];
 
-    return this.authService.validateCookie(this.payload.email = "", cookie)
+    return this.authService.validateCookie((this.payload.email = ''), cookie);
   }
 }
