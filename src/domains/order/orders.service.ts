@@ -67,6 +67,7 @@ export class OrdersService {
             ...item,
             estimated_delivery_date: new Date(item.estimated_delivery_date),
             receiver: receiver.id,
+            sender: sender.id,
             order_activities: [],
           });
 
@@ -157,24 +158,34 @@ export class OrdersService {
   async getOrderById(order_id: string) {
     const order = await this.orderModel
       .findOne({ order_id })
-      .select('-createdAt -updatedAt -__v')
+      .select('-updatedAt -__v')
       .populate([
         {
           path: 'receiver',
           select: '-createdAt -updatedAt -orders -__v',
         },
         {
-          path: 'order_activities',
-          select: '-createdAt -updatedAt -__v -admin',
+          path: 'sender',
+          select: '-createdAt -updatedAt -orders -__v',
         },
       ])
+      .populate<{ order_activities: OrderActivityDocument[] }>({
+        path: 'order_activities',
+        select: 'status',
+        options: { sort: { date: -1 }, limit: 1 },
+      })
+      .lean()
       .exec();
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    return {
+      ...order,
+      order_status: order.order_activities?.[0]?.status ?? null,
+      order_activities: undefined,
+    };
   }
 
   async updateOrderStatus(
