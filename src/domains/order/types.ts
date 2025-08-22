@@ -172,12 +172,10 @@ export class ItemInformation {
 }
 
 export class OrderResponseDto {
-  _id: string;
+  order_id: string;
   item_type: string;
-  item_description: string;
-  net_weight: string;
+  sender: string;
   receiver: string | null;
   estimated_delivery_date: Date;
   status: string | null;
-  order_id: string;
 }

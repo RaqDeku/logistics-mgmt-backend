@@ -129,6 +129,10 @@ export class OrdersService {
           path: 'receiver',
           select: 'full_name',
         })
+        .populate<{ sender: SenderDocument }>({
+          path: 'sender',
+          select: 'full_name',
+        })
         .populate<{ order_activities: OrderActivityDocument[] }>({
           path: 'order_activities',
           select: 'status',
@@ -139,10 +143,8 @@ export class OrdersService {
         .exec();
 
       return orders.map((o) => ({
-        _id: o.id,
         item_type: o.item_type,
-        item_description: o.item_description,
-        net_weight: o.net_weight,
+        sender: o.sender?.full_name,
         receiver: o.receiver?.full_name,
         estimated_delivery_date: o.estimated_delivery_date,
         status: o.order_activities[0]?.status,
@@ -242,18 +244,28 @@ export class OrdersService {
   }
 
   async trackOrder(order_id: string) {
-    const order = await this.orderModel.findOne({ order_id }).exec();
+    const order = await this.orderModel
+      .findOne({ order_id })
+      .select(['order_id', 'item_type', 'estimated_delivery_date'])
+      .lean()
+      .exec();
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
     try {
-      return await this.orderActivityModel
+      const orderActivities = await this.orderActivityModel
         .find({ order_id })
-        .select('status date')
+        .select('-__v -createdAt -updatedAt -admin')
         .sort({ date: -1 })
         .exec();
+
+      return {
+        ...order,
+        status: orderActivities[0]?.status,
+        timeline: orderActivities,
+      };
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException('Something went wrong');
