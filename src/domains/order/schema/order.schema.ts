@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { Receiver } from './reciever.schema';
 import { OrderActivity } from './order.activities.schema';
+import { Sender } from './sender.schema';
 
 export type OrderDocument = HydratedDocument<Order>;
 
@@ -19,11 +20,17 @@ export class Order {
   @Prop({ required: true, type: Types.ObjectId, ref: Receiver.name })
   receiver: Types.ObjectId;
 
+  @Prop({ required: true, type: Types.ObjectId, ref: Sender.name })
+  sender: Types.ObjectId;
+
   @Prop({ required: true, type: Date })
   estimated_delivery_date: Date;
 
   @Prop({ required: true, type: Number })
   revenue: number;
+
+  @Prop({ required: true, type: Number })
+  estimated_value: number;
 
   @Prop({ unique: true, index: true })
   order_id: string;
