@@ -22,10 +22,14 @@ import { Public } from '../auth/auth.guard';
 import { Types } from 'mongoose';
 import { UpdateOrderStatus } from './dto/update-status.dto';
 import { OrderResponseDto } from './types';
+import { OrderAnalyticsService } from './analytics.service';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly orderService: OrdersService) {}
+  constructor(
+    private readonly orderService: OrdersService,
+    private readonly analyticsService: OrderAnalyticsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new order to deliver' })
@@ -33,7 +37,6 @@ export class OrdersController {
   @ApiBearerAuth('Bearer')
   @ApiCreatedResponse({
     description: 'Order created successfully',
-    type: CreateOrdersDto,
   })
   async create(@Body() createOrdersDto: CreateOrdersDto, @Req() req: Request) {
     const admin = req['user'];
@@ -55,7 +58,7 @@ export class OrdersController {
   @ApiBearerAuth('Bearer')
   @ApiOperation({ summary: 'Get analytics of all orders' })
   async analytics() {
-    return await this.orderService.analytics();
+    return await this.analyticsService.analytics();
   }
 
   @Get('export')

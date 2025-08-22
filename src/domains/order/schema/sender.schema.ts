@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { Address } from '../types';
 
-export type ReceiverDocument = HydratedDocument<Receiver>;
+export type SenderDocument = HydratedDocument<Sender>;
 
 @Schema({ timestamps: true })
-export class Receiver {
+export class Sender {
   @Prop({ required: true })
   full_name: string;
 
@@ -22,4 +22,4 @@ export class Receiver {
   orders: Types.ObjectId[];
 }
 
-export const receiverSchema = SchemaFactory.createForClass(Receiver);
+export const SenderSchema = SchemaFactory.createForClass(Sender);

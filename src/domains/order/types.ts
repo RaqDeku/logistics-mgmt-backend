@@ -10,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class ReceiverAddress {
+export class Address {
   @ApiProperty({
     description: "The receiver's city/town",
     example: 'Kumasi',
@@ -20,12 +20,12 @@ export class ReceiverAddress {
   city: string;
 
   @ApiProperty({
-    description: "The receiver's region",
+    description: "The receiver's state",
     example: 'Ashanti region',
   })
   @IsNotEmpty()
   @IsString()
-  region: string;
+  state: string;
 
   @ApiProperty({
     description: "The receiver's country",
@@ -36,12 +36,20 @@ export class ReceiverAddress {
   country: string;
 
   @ApiProperty({
-    description: "The receiver's pick up location address",
+    description: "The receiver's pick up location/street address",
     example: 'house no 8, knust avenue',
   })
   @IsNotEmpty()
   @IsString()
   address: string;
+
+  @ApiProperty({
+    description: "The receiver's zip code",
+    example: '00233',
+  })
+  @IsNotEmpty()
+  @IsString()
+  zip_code: string;
 }
 
 export class ReceiverInformation {
@@ -71,11 +79,45 @@ export class ReceiverInformation {
 
   @ApiProperty({
     description: "The receiver's address",
-    type: ReceiverAddress,
+    type: Address,
   })
   @IsNotEmpty()
   @IsObject()
-  address: ReceiverAddress;
+  address: Address;
+}
+
+export class SenderInformation {
+  @ApiProperty({
+    description: "The sender's full name",
+    example: 'John Andy',
+  })
+  @IsNotEmpty()
+  @IsString()
+  full_name: string;
+
+  @ApiProperty({
+    description: "The sender's phone number",
+    example: '+233 200000002',
+  })
+  @IsString()
+  @IsNotEmpty()
+  mobile_number: string;
+
+  @ApiProperty({
+    description: "The sender's email",
+    example: 'sender@gmail.com',
+  })
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    description: "The sender's address",
+    type: Address,
+  })
+  @IsNotEmpty()
+  @IsObject()
+  address: Address;
 }
 
 export class ItemInformation {
@@ -119,6 +161,14 @@ export class ItemInformation {
   @IsNotEmpty()
   @IsNumber()
   revenue: number;
+
+  @ApiProperty({
+    description: "The item's declared value",
+    example: '100.00',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  estimated_value: number;
 }
 
 export class OrderResponseDto {
