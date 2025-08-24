@@ -4,7 +4,6 @@ import {
   IsEmail,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsObject,
   IsString,
   MaxLength,
@@ -172,10 +171,201 @@ export class ItemInformation {
 }
 
 export class OrderResponseDto {
+  @ApiProperty({
+    description: 'The unique ID of the order',
+    example: 'ORD-1672531200000-abcdef123',
+  })
   order_id: string;
+
+  @ApiProperty({
+    description: 'The type of item in the order',
+    example: 'Electronics',
+  })
   item_type: string;
+
+  @ApiProperty({ description: "The sender's full name", example: 'John Andy' })
   sender: string;
+
+  @ApiProperty({
+    description: "The receiver's full name",
+    example: 'Joe Doe',
+    nullable: true,
+  })
   receiver: string | null;
+
+  @ApiProperty({
+    description: 'The estimated delivery date of the order',
+    example: '2025-01-01T00:00:00.000Z',
+  })
   estimated_delivery_date: Date;
+
+  @ApiProperty({
+    description: 'The current status of the order',
+    example: 'In Transit',
+    nullable: true,
+  })
   status: string | null;
+
+  @ApiProperty({
+    description: 'Indicates if the order is on hold',
+    example: false,
+  })
+  is_on_hold: boolean;
+
+  hold_reason?: string;
+
+  hold_duration?: number;
+
+  notes?: string;
+}
+
+export class CurrentHoldActivityDto {
+  @ApiProperty({ example: 'ORD-1672531200000-abcdef123' })
+  order_id: string;
+
+  @ApiProperty({ example: 'On Hold' })
+  status: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'Customer requested reschedule',
+    description: 'Reason for the order being on hold.',
+  })
+  reason?: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'Call before arrival',
+    description: 'Additional notes for the activity.',
+  })
+  notes?: string;
+
+  @ApiProperty({
+    required: false,
+    example: 48,
+    description: 'Duration of the hold in hours.',
+  })
+  duration?: number;
+
+  @ApiProperty({ description: 'The date and time of this activity.' })
+  date: Date;
+
+  @ApiProperty({
+    description: 'The admin who performed this activity.',
+    example: 'Admin User',
+  })
+  placedBy: string;
+}
+
+export class GetOrderByIdResponseDto {
+  @ApiProperty({ example: 'ORD-1672531200000-abcdef123' })
+  order_id: string;
+
+  @ApiProperty({ example: 'Electronics' })
+  item_type: string;
+
+  @ApiProperty({ example: 'A brand new laptop' })
+  item_description: string;
+
+  @ApiProperty({ example: '2.5kg' })
+  net_weight: string;
+
+  @ApiProperty({ type: ReceiverInformation })
+  receiver: ReceiverInformation;
+
+  @ApiProperty({ type: SenderInformation })
+  sender: SenderInformation;
+
+  @ApiProperty()
+  estimated_delivery_date: Date;
+
+  @ApiProperty({ example: 250.5 })
+  revenue: number;
+
+  @ApiProperty({ example: 1200 })
+  estimated_value: number;
+
+  @ApiProperty({
+    example: 'In Transit',
+    nullable: true,
+    description: 'The latest status of the order.',
+  })
+  order_status: string | null;
+
+  @ApiProperty({
+    type: CurrentHoldActivityDto,
+    required: false,
+    nullable: true,
+    description: 'Details of the hold, if the order is currently on hold.',
+  })
+  current_hold?: CurrentHoldActivityDto;
+}
+
+export class TrackOrderTimelineItemDto {
+  @ApiProperty({
+    description: 'The status of the order at this point in time.',
+    example: 'In Transit',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: 'The date of this activity.',
+    example: '2025-01-01T10:00:00.000Z',
+  })
+  date: Date;
+
+  @ApiProperty({
+    description: 'Reason for the status, if any.',
+    example: 'Departed from facility',
+    required: false,
+  })
+  reason?: string;
+
+  @ApiProperty({
+    description: 'Additional notes for the activity.',
+    example: 'Package is on its way to the final destination.',
+    required: false,
+  })
+  notes?: string;
+
+  @ApiProperty({
+    description:
+      'Duration associated with the status (e.g., for hold in hours).',
+    example: 24,
+    required: false,
+  })
+  duration?: number;
+}
+
+export class TrackOrderResponseDto {
+  @ApiProperty({
+    description: 'The unique ID of the order.',
+    example: 'ORD-1672531200000-abcdef123',
+  })
+  order_id: string;
+
+  @ApiProperty({
+    description: 'The type of item in the order.',
+    example: 'Electronics',
+  })
+  item_type: string;
+
+  @ApiProperty({
+    description: 'The estimated delivery date of the order.',
+    example: '2025-01-10T00:00:00.000Z',
+  })
+  estimated_delivery_date: Date;
+
+  @ApiProperty({
+    description: 'The current status of the order.',
+    example: 'In Transit',
+    nullable: true,
+  })
+  status: string | null;
+
+  @ApiProperty({
+    description: 'A chronological list of all activities for the order.',
+    type: [TrackOrderTimelineItemDto],
+  })
+  timeline: TrackOrderTimelineItemDto[];
 }

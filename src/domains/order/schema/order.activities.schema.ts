@@ -1,19 +1,33 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { Admin } from 'src/domains/auth/schema/admin.schema';
+import { Admin } from '../../auth/schema/admin.schema';
+import { OrderStatus, UpdateOrderStatuses } from '../constants';
 
 export type OrderActivityDocument = HydratedDocument<OrderActivity>;
 
 @Schema({ timestamps: true })
 export class OrderActivity {
-  @Prop({ required: true })
-  order_id: Types.ObjectId;
+  @Prop({ required: true, index: true })
+  order_id: string;
 
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    enum: [
+      ...Object.values(OrderStatus),
+      ...Object.values(UpdateOrderStatuses),
+    ],
+    index: true,
+  })
   status: string;
 
   @Prop({ required: false })
   reason?: string;
+
+  @Prop({ required: false })
+  notes?: string;
+
+  @Prop({ required: false })
+  duration?: number;
 
   @Prop({ required: true })
   date: Date;

@@ -6,4 +6,5 @@ export enum UpdateOrderStatuses {
 
 export enum OrderStatus {
   PROCESSING = 'Processing',
+  CREATED = 'Created',
 }

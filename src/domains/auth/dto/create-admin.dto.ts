@@ -21,10 +21,18 @@ export class CreateAdminDto {
   password: string;
 
   @ApiProperty({
-    description: 'The full name of the admin',
+    description: 'The first name of the admin',
     example: 'John Doe',
-    required: false,
+    required: true,
   })
   @IsString()
-  full_name?: string;
+  first_name: string;
+
+  @ApiProperty({
+    description: 'The last name of the admin',
+    example: 'John Doe',
+    required: true,
+  })
+  @IsString()
+  last_name: string;
 }
