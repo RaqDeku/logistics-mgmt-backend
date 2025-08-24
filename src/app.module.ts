@@ -8,22 +8,24 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrderModule } from './domains/order/order.module';
 import { EmailModule } from './services/emails/email.module';
 import { ConfigModule } from '@nestjs/config';
+import { SettingModule } from './domains/setting/setting.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ".env",
-      isGlobal: true
+      envFilePath: '.env',
+      isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGO_URI),
     EventEmitterModule.forRoot({
       wildcard: true,
       delimiter: '.',
       global: true,
-    }), 
+    }),
     AuthModule,
     OrderModule,
-    EmailModule
+    SettingModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

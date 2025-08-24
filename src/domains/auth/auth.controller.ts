@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   Res,
@@ -18,9 +20,12 @@ import {
   ApiCreatedResponse,
   ApiOperation,
   ApiOkResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { Public } from './auth.guard';
+import { ResponsePayload } from '../types';
+import { EditAdminDto } from './dto/edit-admin.dto';
 
 @Controller('admins')
 export class AuthController {
@@ -116,5 +121,23 @@ export class AuthController {
     res.clearCookie('_session');
 
     return 'Success';
+  }
+
+  @Patch('/edit-profile/:id')
+  @ApiBearerAuth('Bearer')
+  @ApiOperation({ summary: 'Edit admin profile details' })
+  @ApiBody({ type: EditAdminDto, description: 'Admin profile edit details' })
+  @ApiOkResponse({
+    description: 'Success',
+    type: ResponsePayload,
+  })
+  async editProfile(
+    @Param('id') id: string,
+    @Body() updateData: EditAdminDto,
+  ): Promise<ResponsePayload> {
+    const res = await this.authService.editProfile(id, updateData);
+    return {
+      message: 'Profile updated successfully',
+    };
   }
 }

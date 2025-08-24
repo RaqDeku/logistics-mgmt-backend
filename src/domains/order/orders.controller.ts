@@ -17,12 +17,17 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { Public } from '../auth/auth.guard';
-import { Types } from 'mongoose';
 import { UpdateOrderStatus } from './dto/update-status.dto';
-import { OrderResponseDto } from './types';
+import {
+  GetOrderByIdResponseDto,
+  OrderResponseDto,
+  TrackOrderResponseDto,
+} from './types';
 import { OrderAnalyticsService } from './analytics.service';
+import { ResponsePayload } from '../types';
 
 @Controller('orders')
 export class OrdersController {
@@ -37,28 +42,48 @@ export class OrdersController {
   @ApiBearerAuth('Bearer')
   @ApiCreatedResponse({
     description: 'Order created successfully',
+    type: ResponsePayload,
   })
-  async create(@Body() createOrdersDto: CreateOrdersDto, @Req() req: Request) {
+  async create(
+    @Body() createOrdersDto: CreateOrdersDto,
+    @Req() req: Request,
+  ): Promise<ResponsePayload> {
     const admin = req['user'];
-    return await this.orderService.createOrders(createOrdersDto, admin);
+    const res = await this.orderService.createOrders(createOrdersDto, admin);
+
+    return {
+      message: 'Order created successfully',
+      data: res,
+    };
   }
 
   @Get()
   @ApiBearerAuth('Bearer')
   @ApiOperation({ summary: 'Get all orders with receiver details' })
-  @ApiBearerAuth('Bearer')
   @ApiOkResponse({
     type: [OrderResponseDto],
   })
-  async findAll() {
-    return await this.orderService.getAllOrders();
+  async findAll(): Promise<ResponsePayload> {
+    const res = await this.orderService.getAllOrders();
+
+    return {
+      message: 'Orders retrived successfully',
+      data: res,
+    };
   }
 
   @Get('analytics')
   @ApiBearerAuth('Bearer')
   @ApiOperation({ summary: 'Get analytics of all orders' })
-  async analytics() {
-    return await this.analyticsService.analytics();
+  @ApiOkResponse({
+    type: ResponsePayload,
+  })
+  async analytics(): Promise<ResponsePayload> {
+    const res = await this.analyticsService.analytics();
+
+    return {
+      data: res,
+    };
   }
 
   @Get('export')
@@ -67,18 +92,34 @@ export class OrdersController {
 
   @Get(':order_id')
   @ApiBearerAuth('Bearer')
-  @ApiOperation({ summary: 'Get an order with receiver details' })
-  @ApiOkResponse()
-  async findOrder(@Param('order_id') order_id: string) {
-    return await this.orderService.getOrderById(order_id);
+  @ApiOperation({ summary: 'Get an order details' })
+  @ApiOkResponse({
+    description: 'The order details.',
+    type: GetOrderByIdResponseDto,
+  })
+  async findOrder(
+    @Param('order_id') order_id: string,
+  ): Promise<ResponsePayload> {
+    const res = await this.orderService.getOrderById(order_id);
+
+    return {
+      data: res,
+    };
   }
 
   @Public()
   @Get('track/:order_id')
   @ApiOperation({ summary: 'Get tracking details of the order' })
-  @ApiOkResponse()
-  async track(@Param('order_id') order_id: string) {
-    return await this.orderService.trackOrder(order_id);
+  @ApiOkResponse({
+    type: TrackOrderResponseDto,
+  })
+  async track(@Param('order_id') order_id: string): Promise<ResponsePayload> {
+    const res = await this.orderService.trackOrder(order_id);
+
+    return {
+      message: 'Tracking details retrieved successfully',
+      data: res,
+    };
   }
 
   @Put(':order_id')
@@ -93,19 +134,23 @@ export class OrdersController {
     type: UpdateOrderStatus,
   })
   @ApiOkResponse({
-    description: 'Order status updated successfully',
+    type: ResponsePayload,
   })
   async updateStatus(
     @Param('order_id') order_id: string,
     @Body() updateOrderStatus: UpdateOrderStatus,
     @Req() req: Request,
-  ) {
+  ): Promise<ResponsePayload> {
     const admin = req['user'];
-    return await this.orderService.updateOrderStatus(
+    const res = await this.orderService.updateOrderStatus(
       order_id,
       updateOrderStatus,
       admin,
     );
+
+    return {
+      message: 'Order status updated successfully',
+    };
   }
 
   @Delete('/:order_id')

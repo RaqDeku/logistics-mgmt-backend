@@ -17,8 +17,13 @@ import {
   OrderActivity,
   OrderActivityDocument,
 } from './schema/order.activities.schema';
-import { OrderResponseDto } from './types';
+import {
+  GetOrderByIdResponseDto,
+  OrderResponseDto,
+  TrackOrderResponseDto,
+} from './types';
 import { Sender, SenderDocument } from './schema/sender.schema';
+import { AdminDocument } from '../auth/schema/admin.schema';
 
 interface AdminPayload {
   id: string;
@@ -45,6 +50,8 @@ export class OrdersService {
     const session = await this.connection.startSession();
 
     try {
+      const createdOrders: OrderDocument[] = [];
+
       await session.withTransaction(async () => {
         // save receiver of order(s)
         const receiver = new this.receiverModel({
@@ -61,7 +68,6 @@ export class OrdersService {
         await sender.save({ session });
 
         // save order(s) with receiver & sender id
-        const createdOrders: OrderDocument[] = [];
         for (const item of items_info) {
           const order = new this.orderModel({
             ...item,
@@ -75,7 +81,7 @@ export class OrdersService {
 
           const activity = new this.orderActivityModel({
             order_id: savedOrder.order_id,
-            status: OrderStatus.PROCESSING,
+            status: OrderStatus.CREATED,
             admin: admin.id,
             date: new Date(Date.now()),
           });
@@ -101,7 +107,7 @@ export class OrdersService {
           orderEvent.type = order.item_type;
           orderEvent.estimated_delivery_date =
             order.estimated_delivery_date.toDateString();
-          orderEvent.status = OrderStatus.PROCESSING;
+          orderEvent.status = OrderStatus.CREATED;
           orderEvent.net_weight = order.net_weight;
           orderEvent.receiver_email = receiver.email;
           orderEvent.receiver_name = receiver.full_name;
@@ -110,7 +116,7 @@ export class OrdersService {
         });
       });
 
-      return 'Order created successfully';
+      return createdOrders.map((o) => ({ order_id: o.order_id }))[0];
     } catch (error) {
       console.log(error);
 
@@ -135,21 +141,31 @@ export class OrdersService {
         })
         .populate<{ order_activities: OrderActivityDocument[] }>({
           path: 'order_activities',
-          select: 'status',
+          select: 'status reason duration notes',
           options: {
             sort: { date: -1 },
+            limit: 1,
           },
         })
         .exec();
 
-      return orders.map((o) => ({
-        item_type: o.item_type,
-        sender: o.sender?.full_name,
-        receiver: o.receiver?.full_name,
-        estimated_delivery_date: o.estimated_delivery_date,
-        status: o.order_activities[0]?.status,
-        order_id: o.order_id,
-      }));
+      return orders.map((order) => {
+        const latestActivity = order.order_activities?.[0];
+        const isOnHold = latestActivity?.status === UpdateOrderStatuses.ON_HOLD;
+
+        return {
+          order_id: order.order_id,
+          item_type: order.item_type,
+          sender: order.sender?.full_name,
+          receiver: order.receiver?.full_name,
+          estimated_delivery_date: order.estimated_delivery_date,
+          status: latestActivity?.status ?? null,
+          is_on_hold: isOnHold,
+          notes: latestActivity?.notes,
+          hold_reason: isOnHold ? latestActivity.reason : undefined,
+          hold_duration: isOnHold ? latestActivity.duration : undefined,
+        };
+      });
     } catch (error) {
       console.log(error);
 
@@ -157,7 +173,7 @@ export class OrdersService {
     }
   }
 
-  async getOrderById(order_id: string) {
+  async getOrderById(order_id: string): Promise<GetOrderByIdResponseDto> {
     const order = await this.orderModel
       .findOne({ order_id })
       .select('-updatedAt -__v')
@@ -173,8 +189,12 @@ export class OrdersService {
       ])
       .populate<{ order_activities: OrderActivityDocument[] }>({
         path: 'order_activities',
-        select: 'status',
+        select: '-__v -updatedAt',
         options: { sort: { date: -1 }, limit: 1 },
+        populate: {
+          path: 'admin',
+          select: 'full_name',
+        },
       })
       .lean()
       .exec();
@@ -183,10 +203,26 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    const latestActivity = order.order_activities?.[0];
+    const holdDetails = {
+      ...latestActivity,
+      placedBy: (latestActivity.admin as unknown as AdminDocument)?.full_name,
+      admin: undefined,
+    };
+    const isOnHold = latestActivity?.status === UpdateOrderStatuses.ON_HOLD;
+
     return {
-      ...order,
-      order_status: order.order_activities?.[0]?.status ?? null,
-      order_activities: undefined,
+      order_id: order.order_id,
+      item_type: order.item_type,
+      item_description: order.item_description,
+      net_weight: order.net_weight,
+      receiver: order.receiver as any,
+      sender: order.sender as any,
+      estimated_delivery_date: order.estimated_delivery_date,
+      revenue: order.revenue,
+      estimated_value: order.estimated_value,
+      order_status: latestActivity?.status ?? null,
+      current_hold: isOnHold ? (holdDetails as any) : undefined,
     };
   }
 
@@ -207,6 +243,8 @@ export class OrdersService {
         const activity = new this.orderActivityModel({
           status: updateOrderStatus.status,
           reason: updateOrderStatus.reason,
+          notes: updateOrderStatus.notes,
+          duration: updateOrderStatus.duration,
           date: new Date(Date.now()),
           admin: admin.id,
           order_id: order.order_id,
@@ -243,10 +281,10 @@ export class OrdersService {
     }
   }
 
-  async trackOrder(order_id: string) {
+  async trackOrder(order_id: string): Promise<TrackOrderResponseDto> {
     const order = await this.orderModel
       .findOne({ order_id })
-      .select(['order_id', 'item_type', 'estimated_delivery_date'])
+      .select('order_id item_type estimated_delivery_date')
       .lean()
       .exec();
 
@@ -254,21 +292,17 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    try {
-      const orderActivities = await this.orderActivityModel
-        .find({ order_id })
-        .select('-__v -createdAt -updatedAt -admin')
-        .sort({ date: -1 })
-        .exec();
+    const orderActivities = await this.orderActivityModel
+      .find({ order_id })
+      .select('status date reason notes duration -_id')
+      .sort({ date: -1 })
+      .lean()
+      .exec();
 
-      return {
-        ...order,
-        status: orderActivities[0]?.status,
-        timeline: orderActivities,
-      };
-    } catch (error) {
-      console.log(error);
-      throw new InternalServerErrorException('Something went wrong');
-    }
+    return {
+      ...order,
+      status: orderActivities[0]?.status ?? null,
+      timeline: orderActivities,
+    };
   }
 }
