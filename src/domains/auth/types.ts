@@ -1,17 +1,23 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class Admin {
-    @ApiProperty({
-      description: 'The admin email',
-      example: "admin@example.com",
-    })
-    email: string
+  @ApiProperty({
+    description: 'The admin email',
+    example: 'admin@example.com',
+  })
+  email: string;
 
-    @ApiProperty({
-      description: 'The admin full name',
-      example: "John Doe",
-    })
-    name: string
+  @ApiProperty({
+    description: 'The admin id',
+    example: '68ac32339405bfdf991ef683',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'The admin full name',
+    example: 'John Doe',
+  })
+  name: string;
 }
 
 export class AuthenticatedAdmin {
@@ -27,4 +33,3 @@ export class AuthenticatedAdmin {
   })
   user: Admin;
 }
-
