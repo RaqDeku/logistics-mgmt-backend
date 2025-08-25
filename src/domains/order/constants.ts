@@ -1,10 +1,10 @@
 export enum UpdateOrderStatuses {
-  IN_TRANSIT = 'In Transit',
-  ON_HOLD = 'On Hold',
-  DELIVERED = 'Delivered',
+  IN_TRANSIT = 'in-transit',
+  ON_HOLD = 'on-hold',
+  DELIVERED = 'delivered',
 }
 
 export enum OrderStatus {
-  PROCESSING = 'Processing',
-  CREATED = 'Created',
+  PROCESSING = 'processing',
+  CREATED = 'created',
 }
