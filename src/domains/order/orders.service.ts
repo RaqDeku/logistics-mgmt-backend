@@ -12,7 +12,7 @@ import { CreateOrdersDto } from './dto/create-order.dto';
 import { OrderCreatedEvent } from 'src/events/order-created.event';
 import { UpdateOrderStatus } from './dto/update-status.dto';
 import { OrderStatus, UpdateOrderStatuses } from './constants';
-import { OrderStatusUpdatedEvent } from 'src/events/order-status-updated.event';
+import { OrderOnHoldEvent } from 'src/events/order-on-hold.event';
 import {
   OrderActivity,
   OrderActivityDocument,
@@ -24,6 +24,9 @@ import {
 } from './types';
 import { Sender, SenderDocument } from './schema/sender.schema';
 import { AdminDocument } from '../auth/schema/admin.schema';
+import { OrderDetails } from 'src/events/types';
+import { OrderInTransitEvent } from 'src/events/order-in-transit.event';
+import { OrderDeliveredEvent } from 'src/events/order-delivered.event';
 
 interface AdminPayload {
   id: string;
@@ -141,7 +144,7 @@ export class OrdersService {
         })
         .populate<{ order_activities: OrderActivityDocument[] }>({
           path: 'order_activities',
-          select: 'status reason duration notes',
+          select: 'status reason duration notes estimated_delivery_date',
           options: {
             sort: { date: -1 },
             limit: 1,
@@ -158,7 +161,9 @@ export class OrdersService {
           item_type: order.item_type,
           sender: order.sender?.full_name,
           receiver: order.receiver?.full_name,
-          estimated_delivery_date: order.estimated_delivery_date,
+          estimated_delivery_date:
+            latestActivity?.estimated_delivery_date ??
+            order.estimated_delivery_date,
           status: latestActivity?.status ?? null,
           is_on_hold: isOnHold,
           notes: latestActivity?.notes,
@@ -218,7 +223,9 @@ export class OrdersService {
       net_weight: order.net_weight,
       receiver: order.receiver as any,
       sender: order.sender as any,
-      estimated_delivery_date: order.estimated_delivery_date,
+      estimated_delivery_date:
+        latestActivity?.estimated_delivery_date ??
+        order.estimated_delivery_date,
       revenue: order.revenue,
       estimated_value: order.estimated_value,
       order_status: latestActivity?.status ?? null,
@@ -245,6 +252,9 @@ export class OrdersService {
           reason: updateOrderStatus.reason,
           notes: updateOrderStatus.notes,
           duration: updateOrderStatus.duration,
+          estimated_delivery_date: new Date(
+            updateOrderStatus.estimated_delivery_date,
+          ),
           date: new Date(Date.now()),
           admin: admin.id,
           order_id: order.order_id,
@@ -259,18 +269,11 @@ export class OrdersService {
           .findOne({ orders: { $in: [order.id] } })
           .exec();
 
-        const orderUpdatedEvent = new OrderStatusUpdatedEvent();
-        orderUpdatedEvent.id = order.order_id;
-        orderUpdatedEvent.type = order.item_type;
-        orderUpdatedEvent.estimated_delivery_date =
-          order.estimated_delivery_date.toDateString();
-        orderUpdatedEvent.status = updateOrderStatus.status;
-        orderUpdatedEvent.net_weight = order.net_weight;
-        orderUpdatedEvent.receiver_email = receiver.email;
-        orderUpdatedEvent.receiver_name = receiver.full_name;
-        orderUpdatedEvent.reason = updateOrderStatus.reason;
-
-        this.eventEmitter.emit('order.updated', orderUpdatedEvent);
+        this.emitOrderEvent(updateOrderStatus.status, {
+          order,
+          receiver,
+          activity,
+        });
       });
 
       return 'Order updated successfully';
@@ -304,5 +307,59 @@ export class OrdersService {
       status: orderActivities[0]?.status ?? null,
       timeline: orderActivities,
     };
+  }
+
+  private async emitOrderEvent(
+    status: UpdateOrderStatuses,
+    {
+      order,
+      receiver,
+      activity,
+    }: {
+      order: OrderDocument;
+      receiver: ReceiverDocument;
+      activity: OrderActivityDocument;
+    },
+  ) {
+    switch (status) {
+      case UpdateOrderStatuses.ON_HOLD: {
+        const orderOnHoldEvent = new OrderOnHoldEvent();
+
+        orderOnHoldEvent.id = order.order_id;
+        orderOnHoldEvent.receiver_email = receiver.email;
+        orderOnHoldEvent.receiver_name = receiver.full_name;
+        orderOnHoldEvent.duration = activity.duration;
+        orderOnHoldEvent.notes = activity.notes;
+        orderOnHoldEvent.reason = activity.reason;
+
+        this.eventEmitter.emit('order.updated.on-hold', orderOnHoldEvent);
+        break;
+      }
+      case UpdateOrderStatuses.IN_TRANSIT: {
+        const orderInTransitEvent = new OrderInTransitEvent();
+
+        orderInTransitEvent.id = order.order_id;
+        orderInTransitEvent.receiver_email = receiver.email;
+        orderInTransitEvent.receiver_name = receiver.full_name;
+        orderInTransitEvent.estimated_delivery_date =
+          activity.estimated_delivery_date.toDateString();
+        orderInTransitEvent.notes = activity.notes;
+
+        this.eventEmitter.emit('order.updated.in-transit', orderInTransitEvent);
+        break;
+      }
+      case UpdateOrderStatuses.DELIVERED: {
+        const orderDeliveredEvent = new OrderDeliveredEvent();
+
+        orderDeliveredEvent.id = order.order_id;
+        orderDeliveredEvent.receiver_email = receiver.email;
+        orderDeliveredEvent.receiver_name = receiver.full_name;
+        orderDeliveredEvent.delivery_date =
+          activity.estimated_delivery_date.toDateString();
+
+        this.eventEmitter.emit('order.updated.delivered', orderDeliveredEvent);
+        break;
+      }
+    }
   }
 }

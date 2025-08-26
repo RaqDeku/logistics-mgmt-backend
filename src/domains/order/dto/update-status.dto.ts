@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { OrderStatus, UpdateOrderStatuses } from '../constants';
 
 const allStatuses = { ...UpdateOrderStatuses };
@@ -46,4 +53,12 @@ export class UpdateOrderStatus {
   @IsOptional()
   @IsNumber()
   duration?: number;
+
+  @ApiProperty({
+    description: "The item's estimated delivery date",
+    example: '2025-01-01',
+  })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  estimated_delivery_date?: Date;
 }
