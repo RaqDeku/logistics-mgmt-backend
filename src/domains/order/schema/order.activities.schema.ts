@@ -29,6 +29,9 @@ export class OrderActivity {
   @Prop({ required: false })
   duration?: number;
 
+  @Prop({ required: false })
+  estimated_delivery_date: Date;
+
   @Prop({ required: true })
   date: Date;
 

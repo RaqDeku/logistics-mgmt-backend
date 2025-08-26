@@ -3,7 +3,9 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { ResetPasswordEvent } from '../../events/reset-password.event';
 import * as nodemailer from 'nodemailer';
 import { OrderCreatedEvent } from 'src/events/order-created.event';
-import { OrderStatusUpdatedEvent } from 'src/events/order-status-updated.event';
+import { OrderOnHoldEvent } from 'src/events/order-on-hold.event';
+import { OrderInTransitEvent } from 'src/events/order-in-transit.event';
+import { OrderDeliveredEvent } from 'src/events/order-delivered.event';
 
 @Injectable()
 export class EmailService {
@@ -66,7 +68,6 @@ export class EmailService {
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Order Created Successfully</title>
           </head>
           <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f4f4f4;">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
@@ -143,8 +144,110 @@ export class EmailService {
     }
   }
 
-  @OnEvent('order.updated', { async: true })
-  async handleOrderUpdatedEvent(event: OrderStatusUpdatedEvent) {
-    console.log('called');
+  @OnEvent('order.updated.on-hold', { async: true })
+  async handleOrderOnHoldEvent(event: OrderOnHoldEvent) {
+    const { id, receiver_email, receiver_name, reason, duration, notes } =
+      event;
+
+    try {
+      await this.transporter.sendMail({
+        from: '"Logistics Management" <no-reply@your-app.com>',
+        to: receiver_email,
+        subject: `Your Shipment ${id} is On Hold`,
+        html: `
+        <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body>
+          <p>Dear ${receiver_name}, </p>
+          <p> Your shipment with tracking number ${id} has been placed on hold. </p>
+          <p>Reason: ${reason} </p>
+          <p>Expected Duration: ${duration} </p>
+          <p>Addition Notes: ${notes} </p>
+
+          <p>We will notify you once your shipment is released. </p>
+
+          <p>Best regards, </p>
+          <p>Oceanlink Team</p>
+          </body>
+          </body>
+          </html>
+        `,
+      });
+    } catch (error) {
+      console.error('Error sending order on hold email:', error);
+    }
+  }
+
+  @OnEvent('order.updated.in-transit', { async: true })
+  async handleOrderInTransitEvent(event: OrderInTransitEvent) {
+    const { id, receiver_email, receiver_name, notes } = event;
+
+    try {
+      await this.transporter.sendMail({
+        from: '"Logistics Management" <no-reply@your-app.com>',
+        to: receiver_email,
+        subject: `Your Shipment ${id} is In Transit`,
+        html: `
+        <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body>
+          <p>Dear ${receiver_name}, </p>
+          <p> Your shipment with tracking number ${id} is in transit. </p>
+          <p>Notes: ${notes} </p>
+      
+          <p>Best regards, </p>
+          <p>Oceanlink Team</p>
+          </body>
+          </body>
+          </html>
+        `,
+      });
+    } catch (error) {
+      console.error('Error sending order in transit email:', error);
+    }
+  }
+
+  @OnEvent('order.updated.delivered', { async: true })
+  async handleOrderDeliveredEvent(event: OrderDeliveredEvent) {
+    const { id, receiver_email, receiver_name, delivery_date } = event;
+
+    try {
+      await this.transporter.sendMail({
+        from: '"Logistics Management" <no-reply@your-app.com>',
+        to: receiver_email,
+        subject: `Your Shipment ${id} has been delivered`,
+        html: `
+        <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body>
+          <p>Dear ${receiver_name}, </p>
+          <p> Your shipment with tracking number ${id} has been delivered. </p>
+          <p>Delivery Date: ${delivery_date} </p>
+          <p>Received By: ${receiver_name} </p>
+
+          <p>Thank you for choosing OceanLink. </p>
+
+          <p>Best regards, </p>
+          <p>Oceanlink Team</p>
+          </body>
+          </body>
+          </html>
+        `,
+      });
+    } catch (error) {
+      console.error('Error sending order in transit email:', error);
+    }
   }
 }
