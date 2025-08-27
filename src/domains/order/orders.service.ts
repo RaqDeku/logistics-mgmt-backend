@@ -252,9 +252,9 @@ export class OrdersService {
           reason: updateOrderStatus.reason,
           notes: updateOrderStatus.notes,
           duration: updateOrderStatus.duration,
-          estimated_delivery_date: new Date(
-            updateOrderStatus.estimated_delivery_date,
-          ),
+          estimated_delivery_date: updateOrderStatus.estimated_delivery_date
+            ? new Date(updateOrderStatus?.estimated_delivery_date)
+            : null,
           date: new Date(Date.now()),
           admin: admin.id,
           order_id: order.order_id,
