@@ -149,8 +149,8 @@ export class OrdersService {
           select: 'status reason duration notes estimated_delivery_date',
           options: {
             sort: { date: -1 },
-            limit: 1,
           },
+          perDocumentLimit: 1,
         })
         .exec();
 
@@ -166,7 +166,7 @@ export class OrdersService {
           estimated_delivery_date:
             latestActivity?.estimated_delivery_date ??
             order.estimated_delivery_date,
-          status: latestActivity?.status ?? null,
+          status: latestActivity?.status,
           is_on_hold: isOnHold,
           notes: latestActivity?.notes,
           hold_reason: isOnHold ? latestActivity.reason : undefined,
