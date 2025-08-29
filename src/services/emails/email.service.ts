@@ -29,7 +29,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: '"Logistics Management" <no-reply@your-app.com>',
+        from: process.env.FROM_EMAIL,
         to: email,
         subject: 'Password Reset Request',
         html: `
@@ -59,7 +59,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: '"Logistics Management" <no-reply@your-app.com>',
+        from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: 'Order Created Successfully!',
         html: `
@@ -77,7 +77,7 @@ export class EmailService {
                     <!-- Header -->
                     <tr>
                       <td style="background-color: #007bff; padding: 20px; text-align: center;">
-                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Logistics Management</h1>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">OceanLink Logistics</h1>
                       </td>
                     </tr>
                     <!-- Content -->
@@ -116,19 +116,8 @@ export class EmailService {
                           You will receive further updates as your order progresses. If you have any questions, feel free to contact our support team.
                         </p>
                         <p style="color: #555555; font-size: 16px; line-height: 1.5; margin: 0;">
-                          Thank you for choosing Logistics Management!
+                          Thank you for choosing OceanLink Logistics
                         </p>
-                      </td>
-                    </tr>
-                    <!-- Footer -->
-                    <tr>
-                      <td style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 14px; color: #777777;">
-                        <p style="margin: 0 0 10px;">Logistics Management | 123 Business Ave, Kumasi, Ghana</p>
-                        <p style="margin: 0;">
-                          <a href="mailto:support@your-app.com" style="color: #007bff; text-decoration: none;">Contact Us</a> | 
-                          <a href="https://your-app.com/unsubscribe" style="color: #007bff; text-decoration: none;">Unsubscribe</a>
-                        </p>
-                        <p style="margin: 10px 0 0;">&copy; 2025 Logistics Management. All rights reserved.</p>
                       </td>
                     </tr>
                   </table>
@@ -151,7 +140,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: '"Logistics Management" <no-reply@your-app.com>',
+        from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: `Your Shipment ${id} is On Hold`,
         html: `
@@ -171,7 +160,7 @@ export class EmailService {
           <p>We will notify you once your shipment is released. </p>
 
           <p>Best regards, </p>
-          <p>Oceanlink Team</p>
+          <p>OceanLink Team</p>
           </body>
           </body>
           </html>
@@ -188,7 +177,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: '"Logistics Management" <no-reply@your-app.com>',
+        from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: `Your Shipment ${id} is In Transit`,
         html: `
@@ -204,7 +193,7 @@ export class EmailService {
           <p>Notes: ${notes} </p>
       
           <p>Best regards, </p>
-          <p>Oceanlink Team</p>
+          <p>OceanLink Team</p>
           </body>
           </body>
           </html>
@@ -221,7 +210,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: '"Logistics Management" <no-reply@your-app.com>',
+        from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: `Your Shipment ${id} has been delivered`,
         html: `
@@ -240,7 +229,7 @@ export class EmailService {
           <p>Thank you for choosing OceanLink. </p>
 
           <p>Best regards, </p>
-          <p>Oceanlink Team</p>
+          <p>OceanLink Team</p>
           </body>
           </body>
           </html>
