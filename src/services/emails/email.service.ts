@@ -77,7 +77,7 @@ export class EmailService {
                     <!-- Header -->
                     <tr>
                       <td style="background-color: #007bff; padding: 20px; text-align: center;">
-                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">OceanLink Logistics</h1>
+                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">OceanLink Logistics Ltd</h1>
                       </td>
                     </tr>
                     <!-- Content -->
@@ -116,7 +116,7 @@ export class EmailService {
                           You will receive further updates as your order progresses. If you have any questions, feel free to contact our support team.
                         </p>
                         <p style="color: #555555; font-size: 16px; line-height: 1.5; margin: 0;">
-                          Thank you for choosing OceanLink Logistics
+                          Thank you for choosing OceanLink Logistics Ltd
                         </p>
                       </td>
                     </tr>
@@ -151,17 +151,14 @@ export class EmailService {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
           <body>
-          <p>Dear ${receiver_name}, </p>
-          <p> Your shipment with tracking number ${id} has been placed on hold. </p>
-          <p>Reason: ${reason} </p>
-          <p>Expected Duration: ${duration} </p>
-          <p>Addition Notes: ${notes} </p>
-
-          <p>We will notify you once your shipment is released. </p>
-
-          <p>Best regards, </p>
-          <p>OceanLink Team</p>
-          </body>
+            <p>Dear ${receiver_name}, </p>
+            <p>Your shipment with tracking number <strong>${id}</strong> has been placed on hold.</p>
+            ${reason ? `<p>Reason: ${reason}</p>` : ''}
+            ${duration ? `<p>Expected Duration: ${duration}</p>` : ''}
+            ${notes ? `<p>Additional Notes: ${notes}</p>` : ''}
+            <p>We will notify you once your shipment is released.</p>
+            <p>Best regards,</p>
+            <p>OceanLink Logistics Ltd</p>
           </body>
           </html>
         `,
@@ -188,13 +185,12 @@ export class EmailService {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
           <body>
-          <p>Dear ${receiver_name}, </p>
-          <p> Your shipment with tracking number ${id} is in transit. </p>
-          <p>Notes: ${notes} </p>
-      
-          <p>Best regards, </p>
-          <p>OceanLink Team</p>
-          </body>
+            <p>Dear ${receiver_name}, </p>
+            <p> Your shipment with tracking number <strong>${id}</strong> is in transit. </p>
+            ${notes ? `<p>Additional Notes: ${notes}</p>` : ''}
+        
+            <p>Best regards, </p>
+            <p>OceanLink Logistics Ltd</p>
           </body>
           </html>
         `,
@@ -221,17 +217,16 @@ export class EmailService {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
           <body>
-          <p>Dear ${receiver_name}, </p>
-          <p> Your shipment with tracking number ${id} has been delivered. </p>
-          <p>Delivery Date: ${delivery_date} </p>
-          <p>Received By: ${receiver_name} </p>
+            <p>Dear ${receiver_name}, </p>
+            <p> Your shipment with tracking number <strong>${id}</strong> has been delivered. </p>
+            <p>Delivery Date: ${delivery_date} </p>
+            <p>Received By: ${receiver_name} </p>
 
-          <p>Thank you for choosing OceanLink. </p>
+            <p>Thank you for choosing OceanLink Logistics Ltd. </p>
 
-          <p>Best regards, </p>
-          <p>OceanLink Team</p>
-          </body>
-          </body>
+            <p>Best regards, </p>
+            <p>OceanLink Logistics Ltd</p>
+            </body>
           </html>
         `,
       });
