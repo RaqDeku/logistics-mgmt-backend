@@ -134,6 +134,7 @@ export class OrdersService {
     try {
       const orders = await this.orderModel
         .find()
+        .sort({ createdAt: -1 })
         .select('-createdAt -updatedAt -__v')
         .populate<{ receiver: ReceiverDocument }>({
           path: 'receiver',
