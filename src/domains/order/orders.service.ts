@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -125,7 +126,7 @@ export class OrdersService {
 
       throw new InternalServerErrorException('Something went wrong');
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 
@@ -281,6 +282,8 @@ export class OrdersService {
       console.log(error);
 
       throw new InternalServerErrorException('Something went wrong');
+    } finally {
+      await session.endSession();
     }
   }
 
@@ -307,6 +310,58 @@ export class OrdersService {
       status: orderActivities[0]?.status ?? null,
       timeline: orderActivities,
     };
+  }
+
+  async deleteOrder(order_id: string) {
+    const order = await this.orderModel
+      .findOne({ order_id })
+      .populate<{ order_activities: OrderActivityDocument[] }>({
+        path: 'order_activities',
+        select: '-__v -updatedAt',
+        options: { sort: { date: -1 }, limit: 1 },
+      })
+      .exec();
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const latestActivity = order.order_activities?.[0];
+    if (
+      [UpdateOrderStatuses.IN_TRANSIT, UpdateOrderStatuses.ON_HOLD].includes(
+        latestActivity?.status as UpdateOrderStatuses,
+      )
+    ) {
+      throw new BadRequestException(`Cannot delete order at the moment`);
+    }
+
+    const session = await this.connection.startSession();
+
+    try {
+      await session.withTransaction(async () => {
+        await this.orderModel.deleteOne({ order_id }, { session }).exec();
+
+        await this.orderActivityModel
+          .deleteMany({ order_id }, { session })
+          .exec();
+
+        await this.receiverModel
+          .deleteOne({ orders: { $in: order.id } }, { session })
+          .exec();
+
+        await this.senderModel
+          .deleteOne({ orders: { $in: order.id } }, { session })
+          .exec();
+      });
+
+      return 'Order deleted successfully';
+    } catch (error) {
+      console.log(error);
+
+      throw new InternalServerErrorException('Something went wrong');
+    } finally {
+      await session.endSession();
+    }
   }
 
   private async emitOrderEvent(

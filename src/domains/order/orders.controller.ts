@@ -17,7 +17,6 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
-  getSchemaPath,
 } from '@nestjs/swagger';
 import { Public } from '../auth/auth.guard';
 import { UpdateOrderStatus } from './dto/update-status.dto';
@@ -67,7 +66,7 @@ export class OrdersController {
     const res = await this.orderService.getAllOrders();
 
     return {
-      message: 'Orders retrived successfully',
+      message: 'Orders retrieved successfully',
       data: res,
     };
   }
@@ -149,11 +148,21 @@ export class OrdersController {
     );
 
     return {
-      message: 'Order status updated successfully',
+      message: res,
     };
   }
 
   @Delete('/:order_id')
   @ApiBearerAuth('Bearer')
-  async delete(@Param('order_id') order_id: string) {}
+  @ApiOperation({ summary: 'Delete an order' })
+  @ApiOkResponse({
+    type: ResponsePayload,
+  })
+  async delete(@Param('order_id') order_id: string): Promise<ResponsePayload> {
+    const res = await this.orderService.deleteOrder(order_id);
+
+    return {
+      message: res,
+    };
+  }
 }
