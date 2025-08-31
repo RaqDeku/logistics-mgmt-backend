@@ -110,7 +110,7 @@ export class OrdersService {
           orderEvent.id = order.order_id;
           orderEvent.type = order.item_type;
           orderEvent.estimated_delivery_date =
-            order.estimated_delivery_date.toDateString();
+            order.estimated_delivery_date?.toDateString();
           orderEvent.status = OrderStatus.CREATED;
           orderEvent.net_weight = order.net_weight;
           orderEvent.receiver_email = receiver.email;
@@ -412,7 +412,7 @@ export class OrdersService {
         orderInTransitEvent.receiver_email = receiver.email;
         orderInTransitEvent.receiver_name = receiver.full_name;
         orderInTransitEvent.estimated_delivery_date =
-          activity.estimated_delivery_date.toDateString();
+          activity.estimated_delivery_date?.toDateString();
         orderInTransitEvent.notes = activity.notes;
 
         this.eventEmitter.emit('order.updated.in-transit', orderInTransitEvent);
@@ -425,7 +425,7 @@ export class OrdersService {
         orderDeliveredEvent.receiver_email = receiver.email;
         orderDeliveredEvent.receiver_name = receiver.full_name;
         orderDeliveredEvent.delivery_date =
-          activity.estimated_delivery_date.toDateString();
+          activity.estimated_delivery_date?.toDateString();
 
         this.eventEmitter.emit('order.updated.delivered', orderDeliveredEvent);
         break;
