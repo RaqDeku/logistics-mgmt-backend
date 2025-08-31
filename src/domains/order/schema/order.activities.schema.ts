@@ -30,7 +30,10 @@ export class OrderActivity {
   duration?: number;
 
   @Prop({ required: false })
-  estimated_delivery_date: Date;
+  estimated_delivery_date?: Date;
+
+  @Prop({ required: false })
+  location?: string;
 
   @Prop({ required: true })
   date: Date;

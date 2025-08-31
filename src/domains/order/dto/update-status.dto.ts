@@ -55,6 +55,15 @@ export class UpdateOrderStatus {
   duration?: number;
 
   @ApiProperty({
+    description: 'The location of the order during the update',
+    example: 'Kumasi, Ashanti Region',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @ApiProperty({
     description: "The item's estimated delivery date",
     example: '2025-01-01',
   })

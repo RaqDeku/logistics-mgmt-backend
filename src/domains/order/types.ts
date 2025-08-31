@@ -322,6 +322,13 @@ export class TrackOrderTimelineItemDto {
   reason?: string;
 
   @ApiProperty({
+    description: 'Location of package at time of update.',
+    example: 'Kumasi, Ghana',
+    required: false,
+  })
+  location?: string;
+
+  @ApiProperty({
     description: 'Additional notes for the activity.',
     example: 'Package is on its way to the final destination.',
     required: false,

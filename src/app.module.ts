@@ -9,6 +9,7 @@ import { OrderModule } from './domains/order/order.module';
 import { EmailModule } from './services/emails/email.module';
 import { ConfigModule } from '@nestjs/config';
 import { SettingModule } from './domains/setting/setting.module';
+import { NotificationModule } from './domains/notifications/notification.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SettingModule } from './domains/setting/setting.module';
     AuthModule,
     OrderModule,
     SettingModule,
+    NotificationModule,
     EmailModule,
   ],
   controllers: [AppController],

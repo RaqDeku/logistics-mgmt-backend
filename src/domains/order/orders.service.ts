@@ -25,7 +25,6 @@ import {
 } from './types';
 import { Sender, SenderDocument } from './schema/sender.schema';
 import { AdminDocument } from '../auth/schema/admin.schema';
-import { OrderDetails } from 'src/events/types';
 import { OrderInTransitEvent } from 'src/events/order-in-transit.event';
 import { OrderDeliveredEvent } from 'src/events/order-delivered.event';
 
@@ -87,6 +86,7 @@ export class OrdersService {
             order_id: savedOrder.order_id,
             status: OrderStatus.CREATED,
             admin: admin.id,
+            location: 'OceanLink Logistics Warehouse',
             date: new Date(Date.now()),
           });
 
@@ -240,10 +240,23 @@ export class OrdersService {
     updateOrderStatus: UpdateOrderStatus,
     admin: AdminPayload,
   ) {
-    const order = await this.orderModel.findOne({ order_id }).exec();
+    const order = await this.orderModel
+      .findOne({ order_id })
+      .populate<{ order_activities: OrderActivityDocument[] }>({
+        path: 'order_activities',
+        select: 'status',
+        options: { sort: { date: -1 }, limit: 1 },
+      })
+      .exec();
 
     if (!order) {
       throw new NotFoundException('Order not found');
+    }
+
+    const latestActivity = order.order_activities?.[0];
+
+    if (latestActivity?.status === updateOrderStatus.status) {
+      throw new BadRequestException('Order is already in this status');
     }
 
     const session = await this.connection.startSession();
@@ -254,6 +267,7 @@ export class OrdersService {
           reason: updateOrderStatus.reason,
           notes: updateOrderStatus.notes,
           duration: updateOrderStatus.duration,
+          location: updateOrderStatus.location,
           estimated_delivery_date: updateOrderStatus.estimated_delivery_date
             ? new Date(updateOrderStatus?.estimated_delivery_date)
             : null,
@@ -301,7 +315,7 @@ export class OrdersService {
 
     const orderActivities = await this.orderActivityModel
       .find({ order_id })
-      .select('status date reason notes duration -_id')
+      .select('status date reason notes duration location -_id')
       .sort({ date: -1 })
       .lean()
       .exec();
@@ -372,7 +386,7 @@ export class OrdersService {
       receiver,
       activity,
     }: {
-      order: OrderDocument;
+      order: OrderDocument | any;
       receiver: ReceiverDocument;
       activity: OrderActivityDocument;
     },
