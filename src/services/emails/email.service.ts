@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ResetPasswordEvent } from '../../events/reset-password.event';
 import * as nodemailer from 'nodemailer';
 import { OrderCreatedEvent } from 'src/events/order-created.event';
 import { OrderOnHoldEvent } from 'src/events/order-on-hold.event';
 import { OrderInTransitEvent } from 'src/events/order-in-transit.event';
 import { OrderDeliveredEvent } from 'src/events/order-delivered.event';
+import { NotificationEvent } from 'src/events/log-notification.event';
 
 @Injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
-  constructor() {
+  constructor(private eventEmitter: EventEmitter2) {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT),
@@ -43,6 +44,22 @@ export class EmailService {
       console.error('Error sending password reset email:', error);
       // throw new Error('Failed to send password reset email');
     }
+  }
+
+  private emitNotificationEvent(
+    order_id: string,
+    recipient_email: string,
+    subject: string,
+    status: 'success' | 'failed',
+  ) {
+    const notificationEvent = new NotificationEvent();
+    notificationEvent.order_id = order_id;
+    notificationEvent.recipient_email = recipient_email;
+    notificationEvent.subject = subject;
+    notificationEvent.status = status;
+    notificationEvent.sent_at = new Date();
+
+    this.eventEmitter.emit('email.sent', notificationEvent);
   }
 
   @OnEvent('order.created', { async: true })
@@ -128,7 +145,20 @@ export class EmailService {
           </html>
         `,
       });
+
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        'Order Created Successfully!',
+        'success',
+      );
     } catch (error) {
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        'Order Created Successfully!',
+        'failed',
+      );
       console.error('Error sending order creation email:', error);
     }
   }
@@ -163,7 +193,20 @@ export class EmailService {
           </html>
         `,
       });
+
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        `Your Shipment ${id} is On Hold`,
+        'success',
+      );
     } catch (error) {
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        `Your Shipment ${id} is On Hold`,
+        'failed',
+      );
       console.error('Error sending order on hold email:', error);
     }
   }
@@ -195,7 +238,19 @@ export class EmailService {
           </html>
         `,
       });
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        `Your Shipment ${id} is In Transit`,
+        'success',
+      );
     } catch (error) {
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        `Your Shipment ${id} is In Transit`,
+        'failed',
+      );
       console.error('Error sending order in transit email:', error);
     }
   }
@@ -230,7 +285,19 @@ export class EmailService {
           </html>
         `,
       });
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        `Your Shipment ${id} has been delivered`,
+        'success',
+      );
     } catch (error) {
+      this.emitNotificationEvent(
+        id,
+        receiver_email,
+        `Your Shipment ${id} has been delivered`,
+        'failed',
+      );
       console.error('Error sending order in transit email:', error);
     }
   }

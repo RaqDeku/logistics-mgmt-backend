@@ -85,10 +85,6 @@ export class OrdersController {
     };
   }
 
-  @Get('export')
-  @ApiBearerAuth('Bearer')
-  async export() {}
-
   @Get(':order_id')
   @ApiBearerAuth('Bearer')
   @ApiOperation({ summary: 'Get an order details' })
