@@ -10,6 +10,11 @@ import {
 } from './schema/order.activities.schema';
 import { OrderAnalyticsService } from './analytics.service';
 import { Sender, SenderSchema } from './schema/sender.schema';
+import { ReceiptService } from './receipt.service';
+import {
+  CompanyProfile,
+  CompanyProfileSchema,
+} from '../setting/schema/company-profile.schema';
 
 @Module({
   imports: [
@@ -18,9 +23,10 @@ import { Sender, SenderSchema } from './schema/sender.schema';
       { name: Receiver.name, schema: receiverSchema },
       { name: OrderActivity.name, schema: orderActivitySchema },
       { name: Sender.name, schema: SenderSchema },
+      { name: CompanyProfile.name, schema: CompanyProfileSchema },
     ]),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, OrderAnalyticsService],
+  providers: [OrdersService, OrderAnalyticsService, ReceiptService],
 })
 export class OrderModule {}

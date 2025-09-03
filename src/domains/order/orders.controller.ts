@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   Req,
+  Res,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrdersDto } from './dto/create-order.dto';
@@ -27,12 +28,15 @@ import {
 } from './types';
 import { OrderAnalyticsService } from './analytics.service';
 import { ResponsePayload } from '../types';
+import { ReceiptService } from './receipt.service';
+import express from 'express';
 
 @Controller('orders')
 export class OrdersController {
   constructor(
     private readonly orderService: OrdersService,
     private readonly analyticsService: OrderAnalyticsService,
+    private readonly receiptService: ReceiptService,
   ) {}
 
   @Post()
@@ -82,6 +86,27 @@ export class OrdersController {
 
     return {
       data: res,
+    };
+  }
+
+  @Get('/receipt/:order_id')
+  @ApiBearerAuth('Bearer')
+  @ApiOperation({ summary: 'Generate a receipt for an order' })
+  @ApiOkResponse({
+    description: 'The order receipt detail.',
+    type: GetOrderByIdResponseDto,
+  })
+  async generateReceipt(
+    @Param('order_id') order_id: string,
+    @Res() res: express.Response,
+  ): Promise<ResponsePayload> {
+    const receiptBuffer = await this.receiptService.getReceipt(order_id);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=receipt.pdf');
+
+    return {
+      data: res.end(receiptBuffer),
     };
   }
 

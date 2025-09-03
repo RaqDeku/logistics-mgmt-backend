@@ -61,6 +61,22 @@ export class CompanyProfileDto {
   company_name: string;
 
   @ApiProperty({
+    description: "The company's email",
+    example: 'logistics@gmail.com',
+  })
+  @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  @ApiProperty({
+    description: "The company's phone number",
+    example: '+233-(0)-50-0000002',
+  })
+  @IsNotEmpty()
+  @IsString()
+  phone_number: string;
+
+  @ApiProperty({
     description: "The company's tax identification number",
     example: 'C0012345678',
   })

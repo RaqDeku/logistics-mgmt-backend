@@ -1,0 +1,136 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Package Receipt</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        color: #333;
+        font-size: 14px;
+      }
+      .header {
+        background: #f0f4ff;
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .header h2 {
+        margin: 0;
+        color: #002060;
+      }
+      .section {
+        margin-top: 20px;
+      }
+      .section h3 {
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: #002060;
+        text-transform: uppercase;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 40px;
+      }
+      .highlight {
+        background: #fff8e5;
+        border: 1px solid #ffe08a;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 10px;
+        color: #b36b00;
+        font-weight: bold;
+      }
+      .footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 12px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class='header'>
+      <div>
+        <h2>{{company_name}}</h2>
+        <p>
+          {{address.address}}<br />
+          {{address.city}},
+          {{address.country}}<br />
+          {{phone_number}}
+          |
+          {{email}}
+        </p>
+      </div>
+      <div style='text-align: right;'>
+        <strong>SHIPPING RECEIPT</strong><br />
+        Receipt #:
+        {{order_id}}<br />
+        Date:
+        {{receipt_date}}
+      </div>
+    </div>
+
+    <div class='section'>
+      <div class='info-grid'>
+        <div>
+          <h3>Sender</h3>
+          <p>
+            {{sender.full_name}}<br />
+            {{sender.address.address}}<br />
+            {{sender.address.city}},
+            {{sender.address.country}}<br />
+            {{sender.mobile_number}}<br />
+            {{sender.email}}
+          </p>
+        </div>
+        <div>
+          <h3>Receiver</h3>
+          <p>
+            {{receiver.full_name}}<br />
+            {{receiver.address.address}}<br />
+            {{receiver.address.city}},
+            {{receiver.address.country}}<br />
+            {{receiver.mobile_number}}<br />
+            {{receiver.email}}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class='section'>
+      <h3>Package Details</h3>
+      <div class='info-grid'>
+        <div>
+          <p>
+            <strong>Tracking Number:</strong>
+            {{order_id}}<br />
+            <strong>Description:</strong>
+            {{item_description}}<br />
+            <strong>Item Type:</strong>
+            {{item_type}}
+          </p>
+        </div>
+        <div>
+          <p>
+            <strong>Weight:</strong>
+            {{net_weight}}<br />
+            <strong>Value:</strong>
+            {{estimated_value}}<br />
+            {{!-- <strong>Dimensions:</strong> {{package.dimensions}} --}}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class='footer'>
+      Thank you for choosing
+      {{company_name}}.
+    </div>
+
+  </body>
+</html>
