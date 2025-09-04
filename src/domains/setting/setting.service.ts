@@ -49,7 +49,14 @@ export class SettingsService {
   }
 
   async getCompanyProfile() {
-    return await this.companyProfileModel.findOne().exec();
+    return await this.companyProfileModel
+      .findOne()
+      .populate({
+        path: 'updatedBy',
+        select: 'full_name',
+      })
+      .select('-__v -createdAt')
+      .exec();
   }
 
   async updateCompanyProfile(
