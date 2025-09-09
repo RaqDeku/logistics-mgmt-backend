@@ -203,7 +203,7 @@ export class AuthService {
 
       await admin.save();
 
-      return 'Success';
+      return 'Profile updated successfully';
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException('something went wrong');

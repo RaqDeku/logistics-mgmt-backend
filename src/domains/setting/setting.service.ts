@@ -10,6 +10,9 @@ import {
 } from './schema/company-profile.schema';
 import { Model } from 'mongoose';
 import { CompanyProfileDto } from './dto/company-profile.dto';
+import { ContactDto } from './dto/company.dto';
+import { ContactTeamEvent } from 'src/events/contact.team.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 interface AdminPayload {
   id: string;
@@ -20,6 +23,7 @@ export class SettingsService {
   constructor(
     @InjectModel(CompanyProfile.name)
     private companyProfileModel: Model<CompanyProfileDocument>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async createCompanyProfile(
@@ -82,5 +86,22 @@ export class SettingsService {
       console.log(error);
       throw new InternalServerErrorException('Something went wrong');
     }
+  }
+
+  async contactTeam(contactDto: ContactDto) {
+    const company = await this.companyProfileModel
+      .findOne()
+      .select('email')
+      .exec();
+
+    const contactTeamEvent = new ContactTeamEvent();
+    contactTeamEvent.name = contactDto.name;
+    contactTeamEvent.message = contactDto.message;
+    contactTeamEvent.email = contactDto.email;
+    contactTeamEvent.team_email = company.email;
+
+    this.eventEmitter.emit('contact.team', contactTeamEvent);
+
+    return 'Message well received';
   }
 }

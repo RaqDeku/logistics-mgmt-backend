@@ -11,6 +11,8 @@ import {
 import { CompanyProfileDto } from './dto/company-profile.dto';
 import { ResponsePayload } from '../types';
 import { CompanyProfileResponseDto } from './types';
+import { ContactDto } from './dto/company.dto';
+import { Public } from '../auth/auth.guard';
 
 @Controller('settings')
 export class SettingsController {
@@ -83,6 +85,24 @@ export class SettingsController {
 
     return {
       message: 'Company profile updated successfully',
+    };
+  }
+
+  @Public()
+  @Post('/contact-team')
+  @ApiOperation({ summary: 'Contact team' })
+  @ApiBody({
+    description: 'Contact Oceangate Logistics Team',
+    type: ContactDto,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: ResponsePayload,
+  })
+  async contactTeam(@Body() contactDto: ContactDto) {
+    const res = await this.settingService.contactTeam(contactDto);
+    return {
+      message: res,
     };
   }
 }
