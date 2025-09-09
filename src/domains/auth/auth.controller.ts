@@ -84,9 +84,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Send password reset token to admin email' })
   @ApiOkResponse({
     description: 'Email sent!',
+    type: ResponsePayload,
   })
   async resetPasswordToken(@Query('email') email: string) {
-    return await this.authService.resetPasswordToken(email);
+    const res = await this.authService.resetPasswordToken(email);
+    return {
+      message: res,
+    };
   }
 
   @Public()
@@ -95,9 +99,13 @@ export class AuthController {
   @ApiBody({ type: VerifyTokenDto, description: 'verify token details' })
   @ApiOkResponse({
     description: 'Verified',
+    type: ResponsePayload,
   })
   async verifyPasswordResetToken(@Body() verifyTokenDto: VerifyTokenDto) {
-    return await this.authService.verifyPasswordResetToken(verifyTokenDto);
+    const res = await this.authService.verifyPasswordResetToken(verifyTokenDto);
+    return {
+      message: res,
+    };
   }
 
   @Public()
@@ -105,10 +113,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset admin password after token verification' })
   @ApiBody({ type: ResetPasswordDto, description: 'Reset Password details' })
   @ApiOkResponse({
-    description: 'Password updated',
+    description: 'Success',
+    type: ResponsePayload,
   })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return await this.authService.resetPassword(resetPasswordDto);
+    const res = await this.authService.resetPassword(resetPasswordDto);
+    return {
+      message: res,
+    };
   }
 
   @Public()
@@ -116,11 +128,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Logs out the admin' })
   @ApiOkResponse({
     description: 'Success',
+    type: ResponsePayload,
   })
   async logout(@Res({ passthrough: true }) res: express.Response) {
     res.clearCookie('_session');
 
-    return 'Success';
+    return {
+      message: 'Logged out successfully',
+    };
   }
 
   @Patch('/edit-profile/:id')
@@ -137,7 +152,7 @@ export class AuthController {
   ): Promise<ResponsePayload> {
     const res = await this.authService.editProfile(id, updateData);
     return {
-      message: 'Profile updated successfully',
+      message: res,
     };
   }
 }

@@ -7,6 +7,7 @@ import { OrderOnHoldEvent } from 'src/events/order-on-hold.event';
 import { OrderInTransitEvent } from 'src/events/order-in-transit.event';
 import { OrderDeliveredEvent } from 'src/events/order-delivered.event';
 import { NotificationEvent } from 'src/events/log-notification.event';
+import { ContactTeamEvent } from 'src/events/contact.team.event';
 
 @Injectable()
 export class EmailService {
@@ -299,6 +300,34 @@ export class EmailService {
         'failed',
       );
       console.error('Error sending order in transit email:', error);
+    }
+  }
+
+  @OnEvent('contact.team', { async: true })
+  async handleContactTeamEvent(event: ContactTeamEvent) {
+    const { email, message, name, team_email } = event;
+    try {
+      await this.transporter.sendMail({
+        from: process.env.FROM_EMAIL,
+        to: team_email,
+        subject: `Contact message from website`,
+        html: `
+        <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body>
+            <p>From: ${name} </p>
+            <p>Email: ${email} </p>
+            <p>Message: ${message} </p>
+            </body>
+          </html>
+        `,
+      });
+    } catch (error) {
+      console.log(error);
     }
   }
 }
