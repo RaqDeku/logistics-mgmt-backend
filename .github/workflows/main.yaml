@@ -8,13 +8,11 @@ on:
 
 jobs:
   # -------------------------
-  # Build & Deploy for DEVELOP (Render + Docker Hub)
+  # DEVELOP → Docker + Render
   # -------------------------
   build-develop:
     if: github.ref == 'refs/heads/develop'
-    name: Build (Develop)
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -35,23 +33,19 @@ jobs:
   deploy-develop:
     if: github.ref == 'refs/heads/develop'
     needs: build-develop
-    name: Deploy (Develop to Render)
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - name: Trigger deployment on Render
         env:
           deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          curl "$deploy_url"
+        run: curl "$deploy_url"
 
   # -------------------------
-  # Build & Deploy for MAIN (cPanel SSH)
+  # MAIN → Deploy branch for cPanel Git
   # -------------------------
   build-main:
     if: github.ref == 'refs/heads/main'
-    name: Build (Main)
     runs-on: ubuntu-latest
 
     steps:
@@ -68,38 +62,16 @@ jobs:
       - name: Build NestJS app
         run: npm run build
 
-      - name: Prepare deployment package
+      - name: Prepare deployment branch
         run: |
           mkdir deploy
           cp -r dist package.json package-lock.json deploy/
           cd deploy
-          tar -czf ../deploy.tar.gz .
-
-      - name: Upload to cPanel
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_SSH_KEY }}
-          source: 'deploy.tar.gz'
-          target: '~/repositories/logistics-mgmt-backend'
-
-  deploy-main:
-    if: github.ref == 'refs/heads/main'
-    needs: build-main
-    name: Deploy (Main to cPanel)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Extract & Install on cPanel
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_SSH_KEY }}
-          script: |
-            cd ~/repositories/logistics-mgmt-backend
-            tar -xzf deploy.tar.gz
-            rm deploy.tar.gz
-            npm install --omit=dev
-            touch tmp/restart.txt   # Restart Passenger app
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout -b deploy-cpanel
+          git add .
+          git commit -m "Deploy build from $GITHUB_SHA"
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git push --force origin deploy-cpanel
