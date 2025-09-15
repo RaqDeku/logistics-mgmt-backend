@@ -53,6 +53,8 @@ export class AuthService {
         cookie: await this.generateCookie(savedAdmin.email),
         user: {
           id: savedAdmin.id,
+          first_name: savedAdmin.first_name,
+          last_name: savedAdmin.last_name,
           name: savedAdmin.full_name,
           email: savedAdmin.email,
         },
@@ -81,6 +83,8 @@ export class AuthService {
         cookie: await this.generateCookie(admin.email),
         user: {
           id: admin.id,
+          first_name: admin.first_name,
+          last_name: admin.last_name,
           name: admin.full_name,
           email: admin.email,
         },

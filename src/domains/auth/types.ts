@@ -18,6 +18,18 @@ export class Admin {
     example: 'John Doe',
   })
   name: string;
+
+  @ApiProperty({
+    description: 'The admin first name',
+    example: 'John',
+  })
+  first_name: string;
+
+  @ApiProperty({
+    description: 'The admin last name',
+    example: 'Doe',
+  })
+  last_name: string;
 }
 
 export class AuthenticatedAdmin {
