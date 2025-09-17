@@ -3,12 +3,16 @@ import {
   NotificationActivityLog,
   NotificationActivityLogDocument,
 } from './schema/notification-log.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationEvent } from 'src/events/log-notification.event';
 import { NotificationResponseDto } from './types';
 
+interface AdminPayload {
+  id: string;
+  email: string;
+}
 @Injectable()
 export class NotificationService {
   constructor(
@@ -33,18 +37,48 @@ export class NotificationService {
     }
   }
 
-  async getNotifications(): Promise<NotificationResponseDto[]> {
+  async getNotifications(
+    admin: AdminPayload,
+  ): Promise<NotificationResponseDto[]> {
     try {
       const notifications = await this.notificationLogModel
-        .find()
-        .sort({ sent_at: -1 });
-      return notifications.map((notification) => ({
-        order_id: notification.order_id,
-        recipient_email: notification.recipient_email,
-        subject: notification.subject,
-        status: notification.status,
-        sent_at: notification.sent_at,
-      }));
+        .aggregate([
+          // Join with orders
+          {
+            $lookup: {
+              from: 'orders',
+              localField: 'order_id',
+              foreignField: 'order_id',
+              as: 'order',
+            },
+          },
+          { $unwind: '$order' },
+
+          // Join with order_activities
+          {
+            $lookup: {
+              from: 'order_activities',
+              localField: 'order.order_id',
+              foreignField: 'order_id',
+              as: 'activities',
+            },
+          },
+          { $match: { 'activities.admin': new Types.ObjectId(admin.id) } },
+          { $sort: { sent_at: -1 } },
+          {
+            $project: {
+              _id: 0,
+              order_id: 1,
+              recipient_email: 1,
+              subject: 1,
+              status: 1,
+              sent_at: 1,
+            },
+          },
+        ])
+        .exec();
+
+      return notifications;
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException('Something went wrong');

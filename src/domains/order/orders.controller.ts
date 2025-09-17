@@ -66,8 +66,9 @@ export class OrdersController {
   @ApiOkResponse({
     type: [OrderResponseDto],
   })
-  async findAll(): Promise<ResponsePayload> {
-    const res = await this.orderService.getAllOrders();
+  async findAll(@Req() req: Request): Promise<ResponsePayload> {
+    const admin = req['user'];
+    const res = await this.orderService.getAllOrders(admin);
 
     return {
       message: 'Orders retrieved successfully',
@@ -81,8 +82,9 @@ export class OrdersController {
   @ApiOkResponse({
     type: ResponsePayload,
   })
-  async analytics(): Promise<ResponsePayload> {
-    const res = await this.analyticsService.analytics();
+  async analytics(@Req() req: Request): Promise<ResponsePayload> {
+    const admin = req['user'];
+    const res = await this.analyticsService.analytics(admin);
 
     return {
       data: res,
@@ -99,8 +101,10 @@ export class OrdersController {
   async generateReceipt(
     @Param('order_id') order_id: string,
     @Res() res: express.Response,
+    @Req() req: Request,
   ): Promise<ResponsePayload> {
-    const receiptBuffer = await this.receiptService.getReceipt(order_id);
+    const admin = req['user'];
+    const receiptBuffer = await this.receiptService.getReceipt(order_id, admin);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=receipt.pdf');
@@ -119,8 +123,10 @@ export class OrdersController {
   })
   async findOrder(
     @Param('order_id') order_id: string,
+    @Req() req: Request,
   ): Promise<ResponsePayload> {
-    const res = await this.orderService.getOrderById(order_id);
+    const admin = req['user'];
+    const res = await this.orderService.getOrderById(order_id, admin);
 
     return {
       data: res,
@@ -179,8 +185,12 @@ export class OrdersController {
   @ApiOkResponse({
     type: ResponsePayload,
   })
-  async delete(@Param('order_id') order_id: string): Promise<ResponsePayload> {
-    const res = await this.orderService.deleteOrder(order_id);
+  async delete(
+    @Param('order_id') order_id: string,
+    @Req() req: Request,
+  ): Promise<ResponsePayload> {
+    const admin = req['user'];
+    const res = await this.orderService.deleteOrder(order_id, admin);
 
     return {
       message: res,

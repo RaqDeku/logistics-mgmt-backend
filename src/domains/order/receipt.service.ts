@@ -15,6 +15,10 @@ import {
   CompanyProfileDocument,
 } from '../setting/schema/company-profile.schema';
 
+interface AdminPayload {
+  id: string;
+  email: string;
+}
 @Injectable()
 export class ReceiptService {
   constructor(
@@ -24,9 +28,9 @@ export class ReceiptService {
     private readonly companyProfile: Model<CompanyProfileDocument>,
   ) {}
 
-  async getReceipt(order_id: string) {
+  async getReceipt(order_id: string, admin: AdminPayload) {
     const order = await this.orderModel
-      .findOne({ order_id })
+      .findOne({ order_id, 'order_activities.admin': admin.id })
       .select('-updatedAt -__v')
       .populate([
         { path: 'receiver', select: '-createdAt -updatedAt -orders -__v' },

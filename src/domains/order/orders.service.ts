@@ -130,10 +130,12 @@ export class OrdersService {
     }
   }
 
-  async getAllOrders(): Promise<OrderResponseDto[]> {
+  async getAllOrders(admin: AdminPayload): Promise<OrderResponseDto[]> {
     try {
       const orders = await this.orderModel
-        .find()
+        .find({
+          'order_activities.admin': new Types.ObjectId(admin.id),
+        })
         .sort({ createdAt: -1 })
         .select('-createdAt -updatedAt -__v')
         .populate<{ receiver: ReceiverDocument }>({
@@ -180,9 +182,12 @@ export class OrdersService {
     }
   }
 
-  async getOrderById(order_id: string): Promise<GetOrderByIdResponseDto> {
+  async getOrderById(
+    order_id: string,
+    admin: AdminPayload,
+  ): Promise<GetOrderByIdResponseDto> {
     const order = await this.orderModel
-      .findOne({ order_id })
+      .findOne({ order_id, 'order_activities.admin': admin.id })
       .select('-updatedAt -__v')
       .populate([
         {
@@ -241,7 +246,7 @@ export class OrdersService {
     admin: AdminPayload,
   ) {
     const order = await this.orderModel
-      .findOne({ order_id })
+      .findOne({ order_id, 'order_activities.admin': admin.id })
       .populate<{ order_activities: OrderActivityDocument[] }>({
         path: 'order_activities',
         select: 'status',
@@ -327,9 +332,9 @@ export class OrdersService {
     };
   }
 
-  async deleteOrder(order_id: string) {
+  async deleteOrder(order_id: string, admin: AdminPayload) {
     const order = await this.orderModel
-      .findOne({ order_id })
+      .findOne({ order_id, 'order_activities.admin': admin.id })
       .populate<{ order_activities: OrderActivityDocument[] }>({
         path: 'order_activities',
         select: '-__v -updatedAt',
