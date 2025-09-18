@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Connection } from 'mongoose';
+import mongoose, { Model, Connection } from 'mongoose';
 import {
   OrderActivity,
   OrderActivityDocument,
@@ -24,7 +24,7 @@ export class OrderAnalyticsService {
   async getOrderStats(admin: AdminPayload, startOfYear: Date) {
     const stats = await this.orderModel
       .aggregate([
-        { $match: { 'order_activities.admin': admin.id } },
+        { $match: { admin_id: admin.id } },
         {
           $lookup: {
             from: 'orderactivities',
@@ -186,7 +186,6 @@ export class OrderAnalyticsService {
   async getRecentActivities(admin: AdminPayload) {
     return this.orderActivityModel
       .aggregate([
-        { $match: { 'order_activities.admin': admin.id } },
         { $sort: { date: -1 } },
         { $limit: 5 },
         {
@@ -198,6 +197,11 @@ export class OrderAnalyticsService {
           },
         },
         { $unwind: { path: '$orderInfo', preserveNullAndEmptyArrays: true } },
+        {
+          $match: {
+            'orderInfo.admin_id': admin.id,
+          },
+        },
         {
           $lookup: {
             from: 'admins',

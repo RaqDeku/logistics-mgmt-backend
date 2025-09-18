@@ -53,17 +53,7 @@ export class NotificationService {
             },
           },
           { $unwind: '$order' },
-
-          // Join with order_activities
-          {
-            $lookup: {
-              from: 'order_activities',
-              localField: 'order.order_id',
-              foreignField: 'order_id',
-              as: 'activities',
-            },
-          },
-          { $match: { 'activities.admin': new Types.ObjectId(admin.id) } },
+          { $match: { 'order.admin_id': admin.id } },
           { $sort: { sent_at: -1 } },
           {
             $project: {

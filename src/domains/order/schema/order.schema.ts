@@ -3,6 +3,7 @@ import { HydratedDocument, Types } from 'mongoose';
 import { Receiver } from './reciever.schema';
 import { OrderActivity } from './order.activities.schema';
 import { Sender } from './sender.schema';
+import { Admin } from 'src/domains/auth/types';
 
 export type OrderDocument = HydratedDocument<Order>;
 
@@ -34,6 +35,9 @@ export class Order {
 
   @Prop({ unique: true, index: true })
   order_id: string;
+
+  @Prop({ required: true, type: Types.ObjectId, ref: Admin.name })
+  admin_id: Types.ObjectId;
 
   @Prop({
     required: true,

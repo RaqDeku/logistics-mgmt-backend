@@ -74,6 +74,7 @@ export class OrdersService {
         for (const item of items_info) {
           const order = new this.orderModel({
             ...item,
+            admin_id: admin.id,
             estimated_delivery_date: new Date(item.estimated_delivery_date),
             receiver: receiver.id,
             sender: sender.id,
@@ -134,7 +135,7 @@ export class OrdersService {
     try {
       const orders = await this.orderModel
         .find({
-          'order_activities.admin': new Types.ObjectId(admin.id),
+          admin_id: admin.id,
         })
         .sort({ createdAt: -1 })
         .select('-createdAt -updatedAt -__v')
@@ -187,7 +188,7 @@ export class OrdersService {
     admin: AdminPayload,
   ): Promise<GetOrderByIdResponseDto> {
     const order = await this.orderModel
-      .findOne({ order_id, 'order_activities.admin': admin.id })
+      .findOne({ order_id, admin_id: admin.id })
       .select('-updatedAt -__v')
       .populate([
         {
@@ -246,7 +247,7 @@ export class OrdersService {
     admin: AdminPayload,
   ) {
     const order = await this.orderModel
-      .findOne({ order_id, 'order_activities.admin': admin.id })
+      .findOne({ order_id, admin_id: admin.id })
       .populate<{ order_activities: OrderActivityDocument[] }>({
         path: 'order_activities',
         select: 'status',
@@ -334,7 +335,7 @@ export class OrdersService {
 
   async deleteOrder(order_id: string, admin: AdminPayload) {
     const order = await this.orderModel
-      .findOne({ order_id, 'order_activities.admin': admin.id })
+      .findOne({ order_id, admin_id: admin.id })
       .populate<{ order_activities: OrderActivityDocument[] }>({
         path: 'order_activities',
         select: '-__v -updatedAt',
