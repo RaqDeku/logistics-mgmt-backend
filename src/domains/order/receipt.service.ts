@@ -30,7 +30,7 @@ export class ReceiptService {
 
   async getReceipt(order_id: string, admin: AdminPayload) {
     const order = await this.orderModel
-      .findOne({ order_id, 'order_activities.admin': admin.id })
+      .findOne({ order_id, admin_id: admin.id })
       .select('-updatedAt -__v')
       .populate([
         { path: 'receiver', select: '-createdAt -updatedAt -orders -__v' },
