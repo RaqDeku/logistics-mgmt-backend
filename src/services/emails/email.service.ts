@@ -8,23 +8,25 @@ import { OrderInTransitEvent } from 'src/events/order-in-transit.event';
 import { OrderDeliveredEvent } from 'src/events/order-delivered.event';
 import { NotificationEvent } from 'src/events/log-notification.event';
 import { ContactTeamEvent } from 'src/events/contact.team.event';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: Resend;
 
   constructor(private eventEmitter: EventEmitter2) {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT),
-      // secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      logger: true,
-      debug: true,
-    });
+    // this.transporter = nodemailer.createTransport({
+    //   host: process.env.SMTP_HOST,
+    //   port: parseInt(process.env.SMTP_PORT),
+    //   // secure: process.env.SMTP_SECURE === 'true',
+    //   auth: {
+    //     user: process.env.SMTP_USER,
+    //     pass: process.env.SMTP_PASS,
+    //   },
+    //   logger: true,
+    //   debug: true,
+    // });
+    this.transporter = new Resend(process.env.RESEND_API_KEYS);
   }
 
   @OnEvent('reset.password', { async: true })
@@ -32,7 +34,7 @@ export class EmailService {
     const { email, token } = event;
 
     try {
-      await this.transporter.sendMail({
+      await this.transporter.emails.send({
         from: process.env.FROM_EMAIL,
         to: email,
         subject: 'Password Reset Request',
@@ -78,7 +80,7 @@ export class EmailService {
     } = event;
 
     try {
-      await this.transporter.sendMail({
+      await this.transporter.emails.send({
         from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: 'Order Created Successfully!',
@@ -172,7 +174,7 @@ export class EmailService {
       event;
 
     try {
-      await this.transporter.sendMail({
+      await this.transporter.emails.send({
         from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: `Your Shipment ${id} is On Hold`,
@@ -219,7 +221,7 @@ export class EmailService {
     const { id, receiver_email, receiver_name, notes } = event;
 
     try {
-      await this.transporter.sendMail({
+      await this.transporter.emails.send({
         from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: `Your Shipment ${id} is In Transit`,
@@ -263,7 +265,7 @@ export class EmailService {
     const { id, receiver_email, receiver_name, delivery_date } = event;
 
     try {
-      await this.transporter.sendMail({
+      await this.transporter.emails.send({
         from: process.env.FROM_EMAIL,
         to: receiver_email,
         subject: `Your Shipment ${id} has been delivered`,
@@ -309,7 +311,7 @@ export class EmailService {
   async handleContactTeamEvent(event: ContactTeamEvent) {
     const { email, message, name, team_email } = event;
     try {
-      await this.transporter.sendMail({
+      await this.transporter.emails.send({
         from: process.env.FROM_EMAIL,
         to: team_email,
         subject: `Contact message from website`,
